@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en-us"><head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<meta name="generator" content="Hugo 0.59.0" />
+	
+	<title>Google Kubernetes Engine &#43; Google Cloud Builder &#43; GitHub for easy and quick CD pipeline | Marek Bartík | blog</title>
+	
+	
+
+	<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="http://blog.marekbartik.com/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/1.png"/>
+
+<meta name="twitter:title" content="Google Kubernetes Engine &#43; Google Cloud Builder &#43; GitHub for easy and quick CD pipeline"/>
+<meta name="twitter:description" content="I love Google Cloud Platform. I love Google Kubernetes Engine. And I love GitHub as well. But I need a quick CD pipeline for an easy automated app deployment. Setting up the whole Jenkins CI or using…"/>
+
+	<meta property="og:title" content="Google Kubernetes Engine &#43; Google Cloud Builder &#43; GitHub for easy and quick CD pipeline" />
+<meta property="og:description" content="I love Google Cloud Platform. I love Google Kubernetes Engine. And I love GitHub as well. But I need a quick CD pipeline for an easy automated app deployment. Setting up the whole Jenkins CI or using…" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://blog.marekbartik.com/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/" />
+
+<meta property="og:image" content="http://blog.marekbartik.com/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/1.png" />
+
+<meta property="og:image" content="http://blog.marekbartik.com/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/2.png" />
+
+<meta property="og:image" content="http://blog.marekbartik.com/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/3.png" />
+
+<meta property="og:image" content="http://blog.marekbartik.com/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/4.png" />
+
+<meta property="og:image" content="http://blog.marekbartik.com/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/5.png" />
+
+<meta property="og:image" content="http://blog.marekbartik.com/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/6.png" />
+<meta property="article:published_time" content="2018-02-26T09:58:14+00:00" />
+<meta property="article:modified_time" content="2020-01-07T09:02:22+01:00" />
+
+
+	<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp"
+	 crossorigin="anonymous">
+	<link href="https://fonts.googleapis.com/css?family=Righteous%7CMerriweather:300,300i,400,400i,700,700i" rel="stylesheet">
+	<link href="/css/medium.css" rel="stylesheet">
+	<link href="/css/additional.css" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top mediumnavigation nav-down">
+    <div class="container pr-0">
+        
+        <a class="navbar-brand" href="http://blog.marekbartik.com//">
+
+            
+            <span style="font-family:Righteous;">Marek Bartík | blog</span>
+            
+        </a>
+        
+
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarMediumish" aria-controls="navbarSupportedContent"
+            aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        
+        <div class="collapse navbar-collapse" id="navbarMediumish">
+            
+            <ul class="navbar-nav ml-auto">
+                 
+                <li class="nav-item ">
+                    <a class="nav-link" href="/posts">Blog</a>
+                </li>
+                 
+                <li class="nav-item ">
+                    <a class="nav-link" href="/separate">Separate</a>
+                </li>
+                 
+                <li class="nav-item ">
+                    <a class="nav-link" href="/">About Me</a>
+                </li>
+                 
+                <li class="nav-item ">
+                    <a class="nav-link" href="/static/imprint">Imprint</a>
+                </li>
+                
+            </ul>
+        </div>
+        
+    </div>
+</nav>
+
+
+        <div class="site-content">   
+            <div class="container">
+<div class="mainheading">
+    <h1 class="sitetitle">Marek Bartík | blog</h1>
+    <p class="lead">
+         the clean blog!
+    </p>
+</div><div class="main-content">
+        
+        <div class="container">
+            <div class="row">
+                
+                <div class="col-md-2 pl-0"><div class="share sticky-top sticky-top-offset">
+    <p>Share</p>
+    <ul>
+        <li class="ml-1 mr-1">
+        <a target="_blank" href="https://twitter.com/intent/tweet?text=Google%20Kubernetes%20Engine%20%2b%20Google%20Cloud%20Builder%20%2b%20GitHub%20for%20easy%20and%20quick%20CD%20pipeline&url=http%3a%2f%2fblog.marekbartik.com%2fposts%2f2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline%2f" onclick="window.open(this.href, 'twitter-share', 'width=550,height=435');return false;">
+        <i class="fab fa-twitter"></i>
+        </a>
+        </li>
+        
+        <li class="ml-1 mr-1">
+        <a target="_blank" href="https://facebook.com/sharer.php?u=http%3a%2f%2fblog.marekbartik.com%2fposts%2f2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline%2f" onclick="window.open(this.href, 'facebook-share', 'width=550,height=435');return false;">
+        <i class="fab fa-facebook-f"></i>
+        </a>
+        </li>
+
+        <li class="ml-1 mr-1">
+        <a target="_blank" href="https://www.xing.com/spi/shares/new?url=http%3a%2f%2fblog.marekbartik.com%2fposts%2f2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline%2f" onclick="window.open(this.href, 'xing-share', 'width=550,height=435');return false;">
+        <i class="fab fa-xing"></i>
+        </a>
+        </li>        
+    </ul>
+
+    
+</div>
+</div>
+                                
+                <div class="col-md-9 flex-first flex-md-unordered">
+                    <div class="mainheading">
+                        	
+                        
+                        
+                                                
+                        
+                        <h1 class="posttitle">Google Kubernetes Engine &#43; Google Cloud Builder &#43; GitHub for easy and quick CD pipeline</h1> 
+                    </div>
+
+                    
+                    
+                    
+                    
+
+                    
+                    <div class="article-post">
+                        <p>I love Google Cloud Platform. I love Google Kubernetes Engine. And I love GitHub as well. But I need a quick CD pipeline for an easy automated app deployment. Setting up the whole Jenkins CI or using some paid Pipeline as a service takes too much time, energy and money. Here comes the Google Cloud Builder (currently beta).</p>
+
+<p>I have an easy stateless php app running on nginx and php-fpm in Docker containers versioned in git on GitHub. And I need is to deploy it quickly and cheap to GKE.</p>
+
+<p>Open up Build triggers. It should be in Google console — Tools — Container Registry — Build triggers (but, you know, they change the UI like every week, so it might be somewhere else)</p>
+
+<p><img src="/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/1.png" alt="image" /></p>
+
+<p>Link your GitHub account with GCP</p>
+
+<p><img src="/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/2.png" alt="image" /></p>
+
+<p>Import your repo</p>
+
+<p><img src="/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/3.png" alt="image" /></p>
+
+<p>Set the trigger</p>
+
+<p><img src="/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/4.png" alt="image" /></p>
+
+<p>Choose the cloudbuild.yaml where you can define your <a href="https://cloud.google.com/container-builder/docs/create-custom-build-steps">CI/CD pipeline as a code.</a></p>
+
+<p>It is ugly, I know. I needed a fast solution, not a pretty one.</p>
+
+<p>I need to build two Docker images, from different Dockerfiles, push them to Google Container Registry, template kubernetes deployment manifests, deploy them on GKE (kubectl apply) and create an ingress resource for external http traffic.</p>
+
+<p>After I push to the repo, the build is automatically started</p>
+
+<p><img src="/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/5.png" alt="image" /></p>
+
+<p>I see the git commit and action which caused the trigger, pipeline steps, time they took, total time of the build, link to images in GCR. And log:</p>
+
+<p><img src="/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/6.png" alt="image" /></p>
+
+<p>All is immutable, I can easily rollback deployment to a tagged image with a commit id from git. I can Rebuild the build in Build history. <a href="https://medium.com/@marekbartik/google-kubernetes-engine-with-external-dns-on-cloudflare-provider-24beb2a6b8fc">Ingress DNS records are pushed to CloudFlare automatically.</a></p>
+
+<p>I had to create my own deployment/service/ingress/whatever kubernetes manifests and had to template them with sed (which is super ugly and the syntax won’t always work). Google Cloud Builder is in beta and there is definitely a lot to improve. Templating and GKE integration would be nice (manual kubectl apply, srsly?) to have. As well as deployment strategy selection and easier provisioning maybe? If you are looking for a similar, more-mature service, check out <a href="https://www.shippable.com/">https://www.shippable.com/</a>.</p>
+
+<p>Check the source repo: <a href="https://github.com/bartimar/gke-test">https://github.com/bartimar/gke-test</a></p>
+
+<p>EDIT: Check this amazing github repo of the one and only Kelsey Hightower with great tutorials on Google Cloud Builder <a href="https://github.com/kelseyhightower/pipeline">https://github.com/kelseyhightower/pipeline</a></p>
+
+                    </div>
+                    
+                    
+                    <div class="after-post-tags">
+                        <ul class="tags">
+                        
+                        </ul>
+                    </div>
+                    
+                    
+                    
+                    <div class="row PageNavigation d-flex justify-content-between font-weight-bold">
+                    
+                        <a class="d-block col-md-6" href="http://blog.marekbartik.com/posts/2018-03-24_autoscale-nginx-and-phpfpm-independently-on-google-kubernetes-engine/"> &laquo; Autoscale nginx and php-fpm independently on Google Kubernetes Engine</a>
+                    
+                    
+                    <div class="clearfix"></div>
+                    </div>
+                    
+                </div>
+                
+            </div>
+        </div>
+        
+        
+    </div>
+
+
+            </div>
+<div class="jumbotron fortags">
+	<div class="d-md-flex h-100">
+		<div class="col-md-4 transpdark align-self-center text-center h-100">
+			<div class="d-md-flex align-items-center justify-content-center h-100">
+				<h2 class="d-md-block d-none align-self-center py-1 font-weight-light">Explore <span class="d-none d-md-inline">→</span></h2>
+			</div>
+		</div>
+		<div class="col-md-8 p-5 align-self-center text-center">
+			
+		</div>
+	</div>
+</div>
+
+<footer class="footer">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 col-sm-6 text-center text-lg-left">
+                &copy; Copyright Marek Bartík - All rights reserved
+            </div>
+            <div class="col-md-6 col-sm-6 text-center text-lg-right">    
+                <a target="_blank" rel="noopener" href="https://www.wowthemes.net">Mediumish Theme</a> by WowThemes.net
+            </div>
+        </div>
+    </div>
+</footer>
+
+
+        </div>
+
+
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+<script src="/js/mediumish.js"></script>
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-42148466-5', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+    </body>
+</html>

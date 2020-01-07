@@ -40,7 +40,7 @@ googleAnalytics = "UA-42148466-5"
     name = "Blog"
     weight = 100
     identifier = "blog"
-    url = "/blog"
+    url = "/posts"
 [[menu.main]]
     name = "Separate"
     weight = 100

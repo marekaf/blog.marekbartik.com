@@ -3,11 +3,47 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>http://blog.marekbartik.com/categories/</loc>
+    <loc>http://blog.marekbartik.com/posts/2019-09-26_google-container-registry-lifecycle-policy-for-images-retention/</loc>
+    <lastmod>2020-01-07T09:02:49+01:00</lastmod>
   </url>
   
   <url>
     <loc>http://blog.marekbartik.com/</loc>
+    <lastmod>2020-01-07T09:02:49+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://blog.marekbartik.com/posts/</loc>
+    <lastmod>2020-01-07T09:02:49+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://blog.marekbartik.com/posts/2019-04-05_google-kubernetes-enginehorizontalpodautoscaler-with-external-metrics-from-pubsub/</loc>
+    <lastmod>2020-01-07T09:02:45+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://blog.marekbartik.com/posts/2019-01-26_gcp-stackdriver-logging-export-to-bucket-and-extract-textpayload-from-json-with-cloud-functions/</loc>
+    <lastmod>2020-01-07T09:02:42+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://blog.marekbartik.com/posts/2018-06-29_kubernetes-in-production-poddisruptionbudget/</loc>
+    <lastmod>2020-01-07T09:02:32+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://blog.marekbartik.com/posts/2018-03-24_autoscale-nginx-and-phpfpm-independently-on-google-kubernetes-engine/</loc>
+    <lastmod>2020-01-07T09:02:28+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://blog.marekbartik.com/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/</loc>
+    <lastmod>2020-01-07T09:02:22+01:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://blog.marekbartik.com/categories/</loc>
   </url>
   
   <url>

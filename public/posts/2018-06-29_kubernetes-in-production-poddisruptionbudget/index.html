@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en-us"><head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<meta name="generator" content="Hugo 0.59.0" />
+	
+	<title>Kubernetes in production — PodDisruptionBudget | Marek Bartík | blog</title>
+	
+	
+
+	<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="http://blog.marekbartik.com/posts/2018-06-29_kubernetes-in-production-poddisruptionbudget/images/1.png"/>
+
+<meta name="twitter:title" content="Kubernetes in production — PodDisruptionBudget"/>
+<meta name="twitter:description" content="How to manage disruptions in Kubernetes? Setting a proper RollingUpdate strategy specs solves only one type of disruption.
+What about other disruptions?
+my baby’s on fire [source: google images]"/>
+
+	<meta property="og:title" content="Kubernetes in production — PodDisruptionBudget" />
+<meta property="og:description" content="How to manage disruptions in Kubernetes? Setting a proper RollingUpdate strategy specs solves only one type of disruption.
+What about other disruptions?
+my baby’s on fire [source: google images]" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://blog.marekbartik.com/posts/2018-06-29_kubernetes-in-production-poddisruptionbudget/" />
+
+<meta property="og:image" content="http://blog.marekbartik.com/posts/2018-06-29_kubernetes-in-production-poddisruptionbudget/images/1.png" />
+<meta property="article:published_time" content="2018-06-29T08:50:55+00:00" />
+<meta property="article:modified_time" content="2020-01-07T09:02:32+01:00" />
+
+
+	<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp"
+	 crossorigin="anonymous">
+	<link href="https://fonts.googleapis.com/css?family=Righteous%7CMerriweather:300,300i,400,400i,700,700i" rel="stylesheet">
+	<link href="/css/medium.css" rel="stylesheet">
+	<link href="/css/additional.css" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top mediumnavigation nav-down">
+    <div class="container pr-0">
+        
+        <a class="navbar-brand" href="http://blog.marekbartik.com//">
+
+            
+            <span style="font-family:Righteous;">Marek Bartík | blog</span>
+            
+        </a>
+        
+
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarMediumish" aria-controls="navbarSupportedContent"
+            aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        
+        <div class="collapse navbar-collapse" id="navbarMediumish">
+            
+            <ul class="navbar-nav ml-auto">
+                 
+                <li class="nav-item ">
+                    <a class="nav-link" href="/posts">Blog</a>
+                </li>
+                 
+                <li class="nav-item ">
+                    <a class="nav-link" href="/separate">Separate</a>
+                </li>
+                 
+                <li class="nav-item ">
+                    <a class="nav-link" href="/">About Me</a>
+                </li>
+                 
+                <li class="nav-item ">
+                    <a class="nav-link" href="/static/imprint">Imprint</a>
+                </li>
+                
+            </ul>
+        </div>
+        
+    </div>
+</nav>
+
+
+        <div class="site-content">   
+            <div class="container">
+<div class="mainheading">
+    <h1 class="sitetitle">Marek Bartík | blog</h1>
+    <p class="lead">
+         the clean blog!
+    </p>
+</div><div class="main-content">
+        
+        <div class="container">
+            <div class="row">
+                
+                <div class="col-md-2 pl-0"><div class="share sticky-top sticky-top-offset">
+    <p>Share</p>
+    <ul>
+        <li class="ml-1 mr-1">
+        <a target="_blank" href="https://twitter.com/intent/tweet?text=Kubernetes%20in%20production%20%e2%80%94%20PodDisruptionBudget&url=http%3a%2f%2fblog.marekbartik.com%2fposts%2f2018-06-29_kubernetes-in-production-poddisruptionbudget%2f" onclick="window.open(this.href, 'twitter-share', 'width=550,height=435');return false;">
+        <i class="fab fa-twitter"></i>
+        </a>
+        </li>
+        
+        <li class="ml-1 mr-1">
+        <a target="_blank" href="https://facebook.com/sharer.php?u=http%3a%2f%2fblog.marekbartik.com%2fposts%2f2018-06-29_kubernetes-in-production-poddisruptionbudget%2f" onclick="window.open(this.href, 'facebook-share', 'width=550,height=435');return false;">
+        <i class="fab fa-facebook-f"></i>
+        </a>
+        </li>
+
+        <li class="ml-1 mr-1">
+        <a target="_blank" href="https://www.xing.com/spi/shares/new?url=http%3a%2f%2fblog.marekbartik.com%2fposts%2f2018-06-29_kubernetes-in-production-poddisruptionbudget%2f" onclick="window.open(this.href, 'xing-share', 'width=550,height=435');return false;">
+        <i class="fab fa-xing"></i>
+        </a>
+        </li>        
+    </ul>
+
+    
+</div>
+</div>
+                                
+                <div class="col-md-9 flex-first flex-md-unordered">
+                    <div class="mainheading">
+                        	
+                        
+                        
+                                                
+                        
+                        <h1 class="posttitle">Kubernetes in production — PodDisruptionBudget</h1> 
+                    </div>
+
+                    
+                    
+                    
+                    
+
+                    
+                    <div class="article-post">
+                        
+
+<p>How to manage disruptions in Kubernetes? Setting a proper RollingUpdate strategy specs solves only one type of disruption.</p>
+
+<p>What about other disruptions?</p>
+
+<p><img src="/posts/2018-06-29_kubernetes-in-production-poddisruptionbudget/images/1.png" alt="image" /></p>
+
+<p>my baby’s on fire [source: google images]</p>
+
+<h3 id="voluntary-and-involuntary-disruptions">Voluntary and Involuntary Disruptions</h3>
+
+<p>Pods do not disappear until someone (a person or a controller) destroys them, or there is an unavoidable hardware or system software error.</p>
+
+<p>We call these unavoidable cases <em>involuntary disruptions</em> to an application. Examples are:</p>
+
+<ul>
+<li>a hardware failure of the physical machine backing the node</li>
+<li>cluster administrator deletes VM (instance) by mistake</li>
+<li>cloud provider or hypervisor failure makes VM disappear</li>
+<li>a kernel panic</li>
+<li>the node disappears from the cluster due to cluster network partition</li>
+<li>eviction of a pod due to the node being <a href="https://kubernetes.io/docs/tasks/administer-cluster/out-of-resource/">out-of-resources</a>.</li>
+</ul>
+
+<p>Except for the out-of-resources condition, all these conditions should be familiar to most users; they are not specific to Kubernetes.</p>
+
+<p>We call other cases <em>voluntary disruptions</em>. These include both actions initiated by the application owner and those initiated by a Cluster Administrator. Typical application owner actions include:</p>
+
+<ul>
+<li>deleting the deployment or other controller that manages the pod</li>
+<li>updating a deployment’s pod template causing a restart</li>
+<li>directly deleting a pod (e.g. by accident)</li>
+</ul>
+
+<p>Cluster Administrator actions include:</p>
+
+<ul>
+<li><a href="https://kubernetes.io/docs/tasks/administer-cluster/safely-drain-node/">Draining a node</a> for repair or upgrade.</li>
+<li>Draining a node from a cluster to scale the cluster down (learn about <a href="https://kubernetes.io/docs/tasks/administer-cluster/cluster-management/#cluster-autoscaler">Cluster Autoscaling</a> ).</li>
+<li>Removing a pod from a node to permit something else to fit on that node.### Dealing with Disruptions</li>
+</ul>
+
+<p>Here are some ways to mitigate involuntary disruptions:</p>
+
+<ul>
+<li>Ensure your pod <a href="https://kubernetes.io/docs/tasks/configure-pod-container/assign-cpu-ram-container">requests the resources</a> it needs.</li>
+<li>Replicate your application if you need higher availability. (Learn about running replicated <a href="https://kubernetes.io/docs/tasks/run-application/run-stateless-application-deployment/">stateless</a> and <a href="https://kubernetes.io/docs/tasks/run-application/run-replicated-stateful-application/">stateful</a> applications.)</li>
+<li>For even higher availability when running replicated applications, spread applications across racks (using <a href="https://kubernetes.io/docs/user-guide/node-selection/#inter-pod-affinity-and-anti-affinity-beta-feature">anti-affinity</a>) or across zones (if using a <a href="https://kubernetes.io/docs/setup/multiple-zones">multi-zone cluster</a>.)</li>
+</ul>
+
+<h3 id="poddisruptionbudget">PodDisruptionBudget</h3>
+
+<p>An Application Owner can create a <code>**PodDisruptionBudget**</code> object (PDB) for each application. A PDB limits the number pods of a replicated application that are down simultaneously from voluntary disruptions. For example, a quorum-based application would like to ensure that the number of replicas running is never brought below the number needed for a quorum. A web front end might want to ensure that the number of replicas serving load never falls below a certain percentage of the total.</p>
+
+<p>Cluster managers and hosting providers should use tools which respect Pod Disruption Budgets by calling the <a href="https://kubernetes.io/docs/tasks/administer-cluster/safely-drain-node/#the-eviction-api">Eviction API</a> instead of directly deleting pods. Examples are the <code>**kubectl drain**</code> command and the Kubernetes-on-GCE cluster upgrade script (<code>**cluster/gce/upgrade.sh**</code>).</p>
+
+<p>When a cluster administrator wants to drain a node they use the <code>**kubectl drain**</code> command. That tool tries to evict all the pods on the machine. The eviction request may be temporarily rejected, and the tool periodically retries all failed requests until all pods are terminated, or until a configurable timeout is reached.</p>
+
+<p>Example PDB Using minAvailable:
+<code>**apiVersion: policy/v1beta1  
+kind: PodDisruptionBudget  
+metadata:  
+  name: zk-pdb  
+spec:  
+  minAvailable: 2  
+  selector:  
+    matchLabels:  
+      app: zookeeper**</code></p>
+
+<p>Example PDB Using maxUnavailable (Kubernetes 1.7 or higher):
+<code>**apiVersion: policy/v1beta1  
+kind: PodDisruptionBudget  
+metadata:  
+  name: zk-pdb  
+spec:  
+  maxUnavailable: 1  
+  selector:  
+    matchLabels:  
+      app: zookeeper**</code>### Helm</p>
+
+<p>use this in your Chart!</p>
+
+<p>templates/pdb.yaml:
+<code>**{{- if .Values.budget.minAvailable -}}**  
+apiVersion: policy/v1beta1  
+kind: PodDisruptionBudget  
+metadata:  
+  name: {{ template &amp;#34;app.fullname&amp;#34; . }}  
+  namespace: {{ .Values.namespace }}  
+  labels:  
+    app: {{ template &amp;#34;app.name&amp;#34; . }}  
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace &amp;#34;+&amp;#34; &amp;#34;_&amp;#34; }}  
+    release: {{ .Release.Name }}  
+    heritage: {{ .Release.Service }}  
+spec:  
+  selector:  
+    matchLabels:  
+      app: {{ template &amp;#34;app.name&amp;#34; . }}  
+      env: {{ .Values.env.name }}  
+  minAvailable: **{{ .Values.budget.minAvailable }}**  
+**{{- end -}}**</code></p>
+
+<p>Imagine you have a service with 2 replicas and you need at least 1 to be available even during node upgrades and other ops tasks.</p>
+
+<p>install / upgrade your release:
+<code>helm upgrade --install --debug &amp;#34;$RELEASE_NAME&amp;#34; -f helm/values.yaml \ **--set replicas=2,budget.minAvailable=1** myrepo/mychart</code></p>
+
+<p>kubectl describe pdb “$RELEASE_NAME”
+<code>Name: mysvc-prod  
+Namespace: prod  
+Min available: 1  
+Selector: app=myservice,env=prod  
+Status:  
+ **Allowed disruptions: 1  
+ Current: 2  
+ Desired: 1  
+ Total: 2**  
+Events: &amp;lt;none&amp;gt;</code></p>
+
+<p>drain a node with one of your pods running:
+<code>kubectl drain --delete-local-data --force --ignore-daemonsets gke-mycluster-prod-pool-2fca4c85-k6g5</code><code>node &amp;#34;gke-mycluster-prod-pool-2fca4c85-k6g5&amp;#34; already cordoned  
+WARNING: Deleting pods with local storage: sqlproxy-67f695889d-t778w; Ignoring DaemonSet-managed pods: fluentd-gcp-v3.0.0-llp5s; Deleting pods not managed by ReplicationController, ReplicaSet, Job, DaemonSet or StatefulSet: kube-proxy-gke-testing-dev-pool-2fca4c85-k6g5  
+pod &amp;#34;tiller-deploy-7b7b795779-rcvkd&amp;#34; evicted  
+**pod &amp;#34;mysvc-prod-6856d59f9b-lzrtf&amp;#34; evicted**  
+node &amp;#34;gke-mycluster-prod-pool-2fca4c85-k6g5&amp;#34; drained</code></p>
+
+<p>again: kubectl describe pdb “$RELEASE_NAME”
+<code>Name: mysvc-prod  
+Namespace: prod  
+Min available: 1  
+Selector: app=myservice,env=prod  
+Status:  
+ **Allowed disruptions: 0  
+ Current: 1  
+ Desired: 1  
+ Total: 2**  
+Events: &amp;lt;none&amp;gt;</code></p>
+
+<p>Tadaaa! We drained a node without any disruptions of our service.</p>
+
+<h3 id="pdb-with-1-replica-only">PDB with 1 replica only?</h3>
+
+<p>If we had 1 replica only, the <a href="https://github.com/kubernetes/kubernetes/issues/48307"><strong>kubectl drain would get stuck</strong></a> <strong>always</strong>. Node drains / upgrades would need to be solved manually.</p>
+
+<p>You might expect the eviction API would try to surge a replica to comply with the minAvailable condition, instead the drain gets stuck and it is your responsibility to solve this situation yourself. Is it a <strong>bug or feature</strong>? The Kubernetes community says you shouldn’t use 1 replica in production at all if you want HA, which is fair :)</p>
+
+<p>It does what is expected, though.</p>
+
+<p>If you don’t want your kubectl drains to get stuck, you might want to use PDB for deployments with more than 1 replica.</p>
+
+<p>Edit your templates/pdb.yaml:
+<code>{{- if .Values.budget.minAvailable -}}  
+**{{- if gt .Values.replicaCount 1 -}}**  
+apiVersion: policy/v1beta1  
+kind: PodDisruptionBudget  
+metadata:  
+...  
+**{{- end -}}**  
+{{- end -}}</code>### How to perform Disruptive Actions on your Cluster</p>
+
+<p>If you are a Cluster Administrator, and you need to perform a disruptive action on all the nodes in your cluster, such as a node or system software upgrade, here are some options:</p>
+
+<h4 id="accept-downtime-during-the-upgrade">Accept downtime during the upgrade.</h4>
+
+<h4 id="fail-over-to-another-complete-replica-cluster">Fail over to another complete replica cluster.</h4>
+
+<ul>
+<li>No downtime, but may be costly both for the duplicated nodes, and for human effort to orchestrate the switchover.</li>
+</ul>
+
+<h4 id="write-disruption-tolerant-applications-and-use-pdbs">Write disruption tolerant applications and use PDBs.</h4>
+
+<ul>
+<li>No downtime.</li>
+<li>Minimal resource duplication.</li>
+<li>Allows more automation of cluster administration.</li>
+<li>Writing disruption-tolerant applications is tricky, but the work to tolerate voluntary disruptions largely overlaps with work to support autoscaling and tolerating involuntary disruptions.Sources:<br />
+docs <a href="https://kubernetes.io/docs/concepts/workloads/pods/disruptions/">https://kubernetes.io/docs/concepts/workloads/pods/disruptions/</a><br />
+magic</li>
+</ul>
+
+                    </div>
+                    
+                    
+                    <div class="after-post-tags">
+                        <ul class="tags">
+                        
+                        </ul>
+                    </div>
+                    
+                    
+                    
+                    <div class="row PageNavigation d-flex justify-content-between font-weight-bold">
+                    
+                        <a class="d-block col-md-6" href="http://blog.marekbartik.com/posts/2019-01-26_gcp-stackdriver-logging-export-to-bucket-and-extract-textpayload-from-json-with-cloud-functions/"> &laquo; GCP Stackdriver Logging export to bucket and extract textPayload from json with Cloud Functions</a>
+                    
+                    
+                        <a class="d-block col-md-6 text-lg-right" href="http://blog.marekbartik.com/posts/2018-03-24_autoscale-nginx-and-phpfpm-independently-on-google-kubernetes-engine/">Autoscale nginx and php-fpm independently on Google Kubernetes Engine &raquo;</a>
+                    
+                    <div class="clearfix"></div>
+                    </div>
+                    
+                </div>
+                
+            </div>
+        </div>
+        
+        
+    </div>
+
+
+            </div>
+<div class="jumbotron fortags">
+	<div class="d-md-flex h-100">
+		<div class="col-md-4 transpdark align-self-center text-center h-100">
+			<div class="d-md-flex align-items-center justify-content-center h-100">
+				<h2 class="d-md-block d-none align-self-center py-1 font-weight-light">Explore <span class="d-none d-md-inline">→</span></h2>
+			</div>
+		</div>
+		<div class="col-md-8 p-5 align-self-center text-center">
+			
+		</div>
+	</div>
+</div>
+
+<footer class="footer">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 col-sm-6 text-center text-lg-left">
+                &copy; Copyright Marek Bartík - All rights reserved
+            </div>
+            <div class="col-md-6 col-sm-6 text-center text-lg-right">    
+                <a target="_blank" rel="noopener" href="https://www.wowthemes.net">Mediumish Theme</a> by WowThemes.net
+            </div>
+        </div>
+    </div>
+</footer>
+
+
+        </div>
+
+
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+<script src="/js/mediumish.js"></script>
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-42148466-5', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+    </body>
+</html>

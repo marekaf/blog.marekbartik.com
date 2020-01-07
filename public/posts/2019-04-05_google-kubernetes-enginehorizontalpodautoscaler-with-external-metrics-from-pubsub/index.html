@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en-us"><head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<meta name="generator" content="Hugo 0.59.0" />
+	
+	<title>Google Kubernetes Engine — HorizontalPodAutoscaler with external metrics from PubSub | Marek Bartík | blog</title>
+	
+	
+
+	<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="http://blog.marekbartik.com/posts/2019-04-05_google-kubernetes-enginehorizontalpodautoscaler-with-external-metrics-from-pubsub/images/1.png"/>
+
+<meta name="twitter:title" content="Google Kubernetes Engine — HorizontalPodAutoscaler with external metrics from PubSub"/>
+<meta name="twitter:description" content="There are certain use cases where scaling horizontally based on cpu usage does not really work well. Let’s say you have a consumer worker pool running in Kubernetes."/>
+
+	<meta property="og:title" content="Google Kubernetes Engine — HorizontalPodAutoscaler with external metrics from PubSub" />
+<meta property="og:description" content="There are certain use cases where scaling horizontally based on cpu usage does not really work well. Let’s say you have a consumer worker pool running in Kubernetes." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://blog.marekbartik.com/posts/2019-04-05_google-kubernetes-enginehorizontalpodautoscaler-with-external-metrics-from-pubsub/" />
+
+<meta property="og:image" content="http://blog.marekbartik.com/posts/2019-04-05_google-kubernetes-enginehorizontalpodautoscaler-with-external-metrics-from-pubsub/images/1.png" />
+
+<meta property="og:image" content="http://blog.marekbartik.com/posts/2019-04-05_google-kubernetes-enginehorizontalpodautoscaler-with-external-metrics-from-pubsub/images/2.png" />
+
+<meta property="og:image" content="http://blog.marekbartik.com/posts/2019-04-05_google-kubernetes-enginehorizontalpodautoscaler-with-external-metrics-from-pubsub/images/3.png" />
+<meta property="article:published_time" content="2019-04-05T12:31:58+00:00" />
+<meta property="article:modified_time" content="2020-01-07T09:02:45+01:00" />
+
+
+	<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp"
+	 crossorigin="anonymous">
+	<link href="https://fonts.googleapis.com/css?family=Righteous%7CMerriweather:300,300i,400,400i,700,700i" rel="stylesheet">
+	<link href="/css/medium.css" rel="stylesheet">
+	<link href="/css/additional.css" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top mediumnavigation nav-down">
+    <div class="container pr-0">
+        
+        <a class="navbar-brand" href="http://blog.marekbartik.com//">
+
+            
+            <span style="font-family:Righteous;">Marek Bartík | blog</span>
+            
+        </a>
+        
+
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarMediumish" aria-controls="navbarSupportedContent"
+            aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        
+        <div class="collapse navbar-collapse" id="navbarMediumish">
+            
+            <ul class="navbar-nav ml-auto">
+                 
+                <li class="nav-item ">
+                    <a class="nav-link" href="/posts">Blog</a>
+                </li>
+                 
+                <li class="nav-item ">
+                    <a class="nav-link" href="/separate">Separate</a>
+                </li>
+                 
+                <li class="nav-item ">
+                    <a class="nav-link" href="/">About Me</a>
+                </li>
+                 
+                <li class="nav-item ">
+                    <a class="nav-link" href="/static/imprint">Imprint</a>
+                </li>
+                
+            </ul>
+        </div>
+        
+    </div>
+</nav>
+
+
+        <div class="site-content">   
+            <div class="container">
+<div class="mainheading">
+    <h1 class="sitetitle">Marek Bartík | blog</h1>
+    <p class="lead">
+         the clean blog!
+    </p>
+</div><div class="main-content">
+        
+        <div class="container">
+            <div class="row">
+                
+                <div class="col-md-2 pl-0"><div class="share sticky-top sticky-top-offset">
+    <p>Share</p>
+    <ul>
+        <li class="ml-1 mr-1">
+        <a target="_blank" href="https://twitter.com/intent/tweet?text=Google%20Kubernetes%20Engine%e2%80%8a%e2%80%94%e2%80%8aHorizontalPodAutoscaler%20with%20external%20metrics%20from%20PubSub&url=http%3a%2f%2fblog.marekbartik.com%2fposts%2f2019-04-05_google-kubernetes-enginehorizontalpodautoscaler-with-external-metrics-from-pubsub%2f" onclick="window.open(this.href, 'twitter-share', 'width=550,height=435');return false;">
+        <i class="fab fa-twitter"></i>
+        </a>
+        </li>
+        
+        <li class="ml-1 mr-1">
+        <a target="_blank" href="https://facebook.com/sharer.php?u=http%3a%2f%2fblog.marekbartik.com%2fposts%2f2019-04-05_google-kubernetes-enginehorizontalpodautoscaler-with-external-metrics-from-pubsub%2f" onclick="window.open(this.href, 'facebook-share', 'width=550,height=435');return false;">
+        <i class="fab fa-facebook-f"></i>
+        </a>
+        </li>
+
+        <li class="ml-1 mr-1">
+        <a target="_blank" href="https://www.xing.com/spi/shares/new?url=http%3a%2f%2fblog.marekbartik.com%2fposts%2f2019-04-05_google-kubernetes-enginehorizontalpodautoscaler-with-external-metrics-from-pubsub%2f" onclick="window.open(this.href, 'xing-share', 'width=550,height=435');return false;">
+        <i class="fab fa-xing"></i>
+        </a>
+        </li>        
+    </ul>
+
+    
+</div>
+</div>
+                                
+                <div class="col-md-9 flex-first flex-md-unordered">
+                    <div class="mainheading">
+                        	
+                        
+                        
+                                                
+                        
+                        <h1 class="posttitle">Google Kubernetes Engine — HorizontalPodAutoscaler with external metrics from PubSub</h1> 
+                    </div>
+
+                    
+                    
+                    
+                    
+
+                    
+                    <div class="article-post">
+                        
+
+<p>There are certain use cases where scaling horizontally based on cpu usage does not really work well. Let’s say you have a consumer worker pool running in Kubernetes. The consumers are pulling messages from a PubSub topic. When the queue is filling up we want more workers to process the messages quickly. On the other hand, when the queue is empty, we don’t want to pay for a big worker pool that sits idle. With PubSub Stackdriver metrics adapter running on GKE we can easily autoscale our worker pool for minimum latency and maximum cost-effectivity.### Autoscaling Deployments with External Metrics</p>
+
+<p>This tutorial demonstrates how to automatically scale your GKE workloads based on metrics available in <a href="https://cloud.google.com/stackdriver/">Stackdriver</a>.</p>
+
+<p>If you want to autoscale based on metric exported by your Kubernetes workload or a metric attached to Kubernetes object such as Pod or Node visit <a href="https://cloud.google.com/kubernetes-engine/docs/tutorials/custom-metrics-autoscaling">Autoscaling Deployments with Custom Metrics</a> instead.</p>
+
+<p>This example shows autoscaling based on number of undelivered messages in a <a href="https://cloud.google.com/pubsub/">Cloud Pub/Sub</a> subscription, but the instructions can be applied to any metric available in Stackdriver.</p>
+
+<p><img src="/posts/2019-04-05_google-kubernetes-enginehorizontalpodautoscaler-with-external-metrics-from-pubsub/images/1.png" alt="image" /></p>
+
+<p>Stackdriver Cloud Pub/Sub Monitoring</p>
+
+<h3 id="provision-gcp-resources">Provision GCP resources</h3>
+
+<p>We’ll be using terraform here to provision all necessary GCP resources. The cluster and nodepool’s definition is in file <a href="https://raw.githubusercontent.com/marekaf/gke-hpa-stackdriver-pubsub/master/main.tf">main.tf</a>. Make sure to follow all the steps in README to create a service account for terraform with all necessary permissions to create all the resources.</p>
+
+<p>Then run:
+<code>terraform init  
+terraform plan -out planfile  
+terraform apply planfile</code></p>
+
+<p>The PubSub topic will be named “echo”, the subscription to it “echo-read”. If you’ve run terraform apply successfully, this is provisioned already.
+`resource &#34;google_pubsub_topic&#34; &#34;echo&#34; {<br />
+  name = &#34;echo&#34;<br />
+}</p>
+
+<p>resource &#34;google_pubsub_subscription&#34; &#34;echo&#34; {<br />
+  name  = &#34;echo-read&#34;<br />
+  topic = &#34;${google_pubsub_topic.echo.name}&#34;</p>
+
+<p>ack_deadline_seconds = 20<br />
+}`</p>
+
+<h3 id="deploy-stackdriver-metrics-adapter">Deploy Stackdriver metrics adapter</h3>
+
+<p>Make sure you have kubectl installed and you can <a href="https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl">access the cluster</a>.</p>
+
+<p>Deploy the stackdriver adapter:
+<code>kubectl create -f https://raw.githubusercontent.com/GoogleCloudPlatform/k8s-stackdriver/master/custom-metrics-stackdriver-adapter/deploy/production/adapter.yaml</code></p>
+
+<h3 id="deploy-the-hpa-and-deployment">Deploy the HPA and deployment</h3>
+
+<p>Here’s how the HPA’s definition look like:
+<code>apiVersion: autoscaling/v2beta1  
+kind: HorizontalPodAutoscaler  
+metadata:  
+  name: pubsub  
+spec:  
+  minReplicas: 1  
+  maxReplicas: 5  
+  metrics:  
+  - external:  
+      metricName: pubsub.googleapis.com|subscription|num_undelivered_messages  
+      metricSelector:  
+        matchLabels:  
+          resource.labels.subscription_id: echo-read  
+      targetAverageValue: &amp;#34;2&amp;#34;  
+    type: External  
+  scaleTargetRef:  
+    apiVersion: apps/v1  
+    kind: Deployment  
+    name: pubsub</code></p>
+
+<p>We’ll autoscale between 1–5 replicas, based on external metric _pubsub.googleapis.com|subscription|num_undelivered<em>messages</em> from our <em>echo-read</em> subscription.</p>
+
+<p>Target value is 2 undelivered messages. What does it actually mean though?</p>
+
+<p>Example: let’s say my deployment is currently running <strong>3</strong> replicas and my queue grows from 6 to 8 undelivered messages.<br />
+I have 8/<strong>3</strong>=2.6 undelivered messages per replica.<br />
+That hits the threshold and triggers a scale-out to <strong>4</strong> replicas, which will have 8/<strong>4</strong>=2 undelivered messages per replica and that fits the desired targetAverageValue.<br />
+If I had 50 undelivered messages, I will have 5 replicas as it’s my maximum.<br />
+If I had 0 undelivered messages, I will have 1 replica as it’s my minimum.</p>
+
+<p>The <em>scaleTargetRef</em> is a reference of the resource that I’m autoscaling. It’s a deployment that is defined in file <a href="https://raw.githubusercontent.com/marekaf/gke-hpa-stackdriver-pubsub/master/pubsub-deployment.yaml">pubsub-deployment.yaml</a>.</p>
+
+<p>Deploy the HPA with the deployment that is going to be autoscaled:
+<code>kubectl apply -f  pubsub-hpa.yaml  
+kubectl apply -f  pubsub-deployment.yaml</code></p>
+
+<h3 id="test-it">Test it!</h3>
+
+<p>Publish some messages to the topic
+<code>for i in {1..200}; do   
+  gcloud pubsub topics publish echo --message=”Autoscaling #${i}”  
+done</code></p>
+
+<p>And watch the cluster’s resources doing its magic
+<code>watch &amp;#39;kubectl get pods; echo ; kubectl get hpa&amp;#39;</code></p>
+
+<p><img src="/posts/2019-04-05_google-kubernetes-enginehorizontalpodautoscaler-with-external-metrics-from-pubsub/images/2.png" alt="image" /></p>
+
+<p>scale-out on saturated queue</p>
+
+<p><img src="/posts/2019-04-05_google-kubernetes-enginehorizontalpodautoscaler-with-external-metrics-from-pubsub/images/3.png" alt="image" /></p>
+
+<p>scale-in on empty qeue</p>
+
+<h3 id="summary">Summary</h3>
+
+<p>With this simple setup you have a pretty decent setup for horizontal autoscaling. The ugly thing is running the stackdriver adapter yourself, at least the HPA controller is part of GKE and is fully managed for you.<br />
+The other cool thing about HPA is that <a href="https://cloud.google.com/blog/products/gcp/beyond-cpu-horizontal-pod-autoscaling-comes-to-google-kubernetes-engine">you can use multiple metrics</a> (even a combination of custom/external/cpu) in the same HPA resource and your deployment is going to be scaled based on either of them hitting a threshold.</p>
+
+<h3 id="links">Links</h3>
+
+<p><a href="https://github.com/marekaf/gke-hpa-stackdriver-pubsub">https://github.com/marekaf/gke-hpa-stackdriver-pubsub</a></p>
+
+<p><a href="https://cloud.google.com/kubernetes-engine/docs/tutorials/authenticating-to-cloud-platform">https://cloud.google.com/kubernetes-engine/docs/tutorials/authenticating-to-cloud-platform</a></p>
+
+<p><a href="https://cloud.google.com/kubernetes-engine/docs/tutorials/external-metrics-autoscaling">https://cloud.google.com/kubernetes-engine/docs/tutorials/external-metrics-autoscaling</a></p>
+
+                    </div>
+                    
+                    
+                    <div class="after-post-tags">
+                        <ul class="tags">
+                        
+                        </ul>
+                    </div>
+                    
+                    
+                    
+                    <div class="row PageNavigation d-flex justify-content-between font-weight-bold">
+                    
+                        <a class="d-block col-md-6" href="http://blog.marekbartik.com/posts/2019-09-26_google-container-registry-lifecycle-policy-for-images-retention/"> &laquo; Google Container Registry lifecycle policy for images retention</a>
+                    
+                    
+                        <a class="d-block col-md-6 text-lg-right" href="http://blog.marekbartik.com/posts/2019-01-26_gcp-stackdriver-logging-export-to-bucket-and-extract-textpayload-from-json-with-cloud-functions/">GCP Stackdriver Logging export to bucket and extract textPayload from json with Cloud Functions &raquo;</a>
+                    
+                    <div class="clearfix"></div>
+                    </div>
+                    
+                </div>
+                
+            </div>
+        </div>
+        
+        
+    </div>
+
+
+            </div>
+<div class="jumbotron fortags">
+	<div class="d-md-flex h-100">
+		<div class="col-md-4 transpdark align-self-center text-center h-100">
+			<div class="d-md-flex align-items-center justify-content-center h-100">
+				<h2 class="d-md-block d-none align-self-center py-1 font-weight-light">Explore <span class="d-none d-md-inline">→</span></h2>
+			</div>
+		</div>
+		<div class="col-md-8 p-5 align-self-center text-center">
+			
+		</div>
+	</div>
+</div>
+
+<footer class="footer">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 col-sm-6 text-center text-lg-left">
+                &copy; Copyright Marek Bartík - All rights reserved
+            </div>
+            <div class="col-md-6 col-sm-6 text-center text-lg-right">    
+                <a target="_blank" rel="noopener" href="https://www.wowthemes.net">Mediumish Theme</a> by WowThemes.net
+            </div>
+        </div>
+    </div>
+</footer>
+
+
+        </div>
+
+
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+<script src="/js/mediumish.js"></script>
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-42148466-5', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+    </body>
+</html>
