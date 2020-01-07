@@ -4,17 +4,17 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	<meta name="generator" content="Hugo 0.59.0" />
 	
-	<title>Google Kubernetes Engine &#43; Google Cloud Builder &#43; GitHub for easy and quick CD pipeline | Marek Bartík | blog</title>
+	<title>Google Kubernetes Engine &#43; Cloud Builder &#43; GitHub for easy and quick CD pipeline | marekbartik.com | tech blog</title>
 	
 	
 
 	<meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:image" content="http://blog.marekbartik.com/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/1.png"/>
 
-<meta name="twitter:title" content="Google Kubernetes Engine &#43; Google Cloud Builder &#43; GitHub for easy and quick CD pipeline"/>
+<meta name="twitter:title" content="Google Kubernetes Engine &#43; Cloud Builder &#43; GitHub for easy and quick CD pipeline"/>
 <meta name="twitter:description" content="I love Google Cloud Platform. I love Google Kubernetes Engine. And I love GitHub as well. But I need a quick CD pipeline for an easy automated app deployment. Setting up the whole Jenkins CI or using…"/>
 
-	<meta property="og:title" content="Google Kubernetes Engine &#43; Google Cloud Builder &#43; GitHub for easy and quick CD pipeline" />
+	<meta property="og:title" content="Google Kubernetes Engine &#43; Cloud Builder &#43; GitHub for easy and quick CD pipeline" />
 <meta property="og:description" content="I love Google Cloud Platform. I love Google Kubernetes Engine. And I love GitHub as well. But I need a quick CD pipeline for an easy automated app deployment. Setting up the whole Jenkins CI or using…" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="http://blog.marekbartik.com/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/" />
@@ -48,7 +48,7 @@
         <a class="navbar-brand" href="http://blog.marekbartik.com//">
 
             
-            <span style="font-family:Righteous;">Marek Bartík | blog</span>
+            <span style="font-family:Righteous;">marekbartik.com | tech blog</span>
             
         </a>
         
@@ -68,15 +68,7 @@
                 </li>
                  
                 <li class="nav-item ">
-                    <a class="nav-link" href="/separate">Separate</a>
-                </li>
-                 
-                <li class="nav-item ">
                     <a class="nav-link" href="/">About Me</a>
-                </li>
-                 
-                <li class="nav-item ">
-                    <a class="nav-link" href="/static/imprint">Imprint</a>
                 </li>
                 
             </ul>
@@ -89,9 +81,9 @@
         <div class="site-content">   
             <div class="container">
 <div class="mainheading">
-    <h1 class="sitetitle">Marek Bartík | blog</h1>
+    <h1 class="sitetitle">marekbartik.com | tech blog</h1>
     <p class="lead">
-         the clean blog!
+         
     </p>
 </div><div class="main-content">
         
@@ -102,7 +94,7 @@
     <p>Share</p>
     <ul>
         <li class="ml-1 mr-1">
-        <a target="_blank" href="https://twitter.com/intent/tweet?text=Google%20Kubernetes%20Engine%20%2b%20Google%20Cloud%20Builder%20%2b%20GitHub%20for%20easy%20and%20quick%20CD%20pipeline&url=http%3a%2f%2fblog.marekbartik.com%2fposts%2f2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline%2f" onclick="window.open(this.href, 'twitter-share', 'width=550,height=435');return false;">
+        <a target="_blank" href="https://twitter.com/intent/tweet?text=Google%20Kubernetes%20Engine%20%2b%20Cloud%20Builder%20%2b%20GitHub%20for%20easy%20and%20quick%20CD%20pipeline&url=http%3a%2f%2fblog.marekbartik.com%2fposts%2f2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline%2f" onclick="window.open(this.href, 'twitter-share', 'width=550,height=435');return false;">
         <i class="fab fa-twitter"></i>
         </a>
         </li>
@@ -129,9 +121,27 @@
                         	
                         
                         
+                        
+                        <div class="row post-top-meta">
+                            <div class="col-xs-12 col-md-3 col-lg-2 text-center text-md-left mb-4 mb-md-0 md-nopad-right">
+                                <img class="author-thumb" src="/images/author.jpg" alt="Marek Bartík">
+                            </div>
+                            <div class="col-xs-12 col-md-9 col-lg-10 text-center text-md-left md-nopad-left">
+                                <a target="_blank" class="link-dark">Marek Bartík</a><br>
+                                <span class="author-description">
+                                    Creator of this blog.<br>
+                                    <i class="far fa-star"></i>
+                                    Feb 26, 2018
+                                    <i class="far fa-clock clock"></i>
+                                    2 min read
+                                </span>					
+                            </div>
+                        </div>			
+                        	
+                        
                                                 
                         
-                        <h1 class="posttitle">Google Kubernetes Engine &#43; Google Cloud Builder &#43; GitHub for easy and quick CD pipeline</h1> 
+                        <h1 class="posttitle">Google Kubernetes Engine &#43; Cloud Builder &#43; GitHub for easy and quick CD pipeline</h1> 
                     </div>
 
                     
@@ -141,43 +151,45 @@
 
                     
                     <div class="article-post">
-                        <p>I love Google Cloud Platform. I love Google Kubernetes Engine. And I love GitHub as well. But I need a quick CD pipeline for an easy automated app deployment. Setting up the whole Jenkins CI or using some paid Pipeline as a service takes too much time, energy and money. Here comes the Google Cloud Builder (currently beta).</p>
+                        
+
+<p>I love Google Cloud Platform. I love Google Kubernetes Engine. And I love GitHub as well. But I need a quick CD pipeline for an easy automated app deployment. Setting up the whole Jenkins CI or using some paid Pipeline as a service takes too much time, energy and money. Here comes the Google Cloud Builder (currently beta).</p>
+
+<h2 id="let-s-start">Let&rsquo;s start</h2>
 
 <p>I have an easy stateless php app running on nginx and php-fpm in Docker containers versioned in git on GitHub. And I need is to deploy it quickly and cheap to GKE.</p>
 
-<p>Open up Build triggers. It should be in Google console — Tools — Container Registry — Build triggers (but, you know, they change the UI like every week, so it might be somewhere else)</p>
+<p>Open up <code>Build triggers</code>. It should be in <code>Google console — Tools — Container Registry — Build triggers</code> (but, you know, they change the UI like every week, so it might be somewhere else)
+<img src="/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/1.png" alt="image" /></p>
 
-<p><img src="/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/1.png" alt="image" /></p>
+<p>Link your GitHub account with GCP
+<img src="/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/2.png" alt="image" /></p>
 
-<p>Link your GitHub account with GCP</p>
+<p>Import your repo
+<img src="/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/3.png" alt="image" /></p>
 
-<p><img src="/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/2.png" alt="image" /></p>
-
-<p>Import your repo</p>
-
-<p><img src="/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/3.png" alt="image" /></p>
-
-<p>Set the trigger</p>
-
-<p><img src="/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/4.png" alt="image" /></p>
+<p>Set the trigger
+<img src="/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/4.png" alt="image" /></p>
 
 <p>Choose the cloudbuild.yaml where you can define your <a href="https://cloud.google.com/container-builder/docs/create-custom-build-steps">CI/CD pipeline as a code.</a></p>
+
+<h2 id="let-s-test-it">Let&rsquo;s test it</h2>
 
 <p>It is ugly, I know. I needed a fast solution, not a pretty one.</p>
 
 <p>I need to build two Docker images, from different Dockerfiles, push them to Google Container Registry, template kubernetes deployment manifests, deploy them on GKE (kubectl apply) and create an ingress resource for external http traffic.</p>
 
-<p>After I push to the repo, the build is automatically started</p>
+<p>After I push to the repo, the build is automatically started
+<img src="/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/5.png" alt="image" /></p>
 
-<p><img src="/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/5.png" alt="image" /></p>
+<p>I see the git commit and action which caused the trigger, pipeline steps, time they took, total time of the build, link to images in GCR. And log:
+<img src="/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/6.png" alt="image" /></p>
 
-<p>I see the git commit and action which caused the trigger, pipeline steps, time they took, total time of the build, link to images in GCR. And log:</p>
-
-<p><img src="/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/6.png" alt="image" /></p>
+<h2 id="summary">Summary</h2>
 
 <p>All is immutable, I can easily rollback deployment to a tagged image with a commit id from git. I can Rebuild the build in Build history. <a href="https://medium.com/@marekbartik/google-kubernetes-engine-with-external-dns-on-cloudflare-provider-24beb2a6b8fc">Ingress DNS records are pushed to CloudFlare automatically.</a></p>
 
-<p>I had to create my own deployment/service/ingress/whatever kubernetes manifests and had to template them with sed (which is super ugly and the syntax won’t always work). Google Cloud Builder is in beta and there is definitely a lot to improve. Templating and GKE integration would be nice (manual kubectl apply, srsly?) to have. As well as deployment strategy selection and easier provisioning maybe? If you are looking for a similar, more-mature service, check out <a href="https://www.shippable.com/">https://www.shippable.com/</a>.</p>
+<p>I had to create my own deployment/service/ingress/whatever kubernetes manifests and had to template them with sed (which is super ugly and the syntax won’t always work). Google Cloud Builder is in beta and there is definitely a lot to improve. Templating and GKE integration would be nice (manual kubectl apply, srsly?) to have. As well as deployment strategy selection and easier provisioning maybe?</p>
 
 <p>Check the source repo: <a href="https://github.com/bartimar/gke-test">https://github.com/bartimar/gke-test</a></p>
 
@@ -196,7 +208,7 @@
                     
                     <div class="row PageNavigation d-flex justify-content-between font-weight-bold">
                     
-                        <a class="d-block col-md-6" href="http://blog.marekbartik.com/posts/2018-03-24_autoscale-nginx-and-phpfpm-independently-on-google-kubernetes-engine/"> &laquo; Autoscale nginx and php-fpm independently on Google Kubernetes Engine</a>
+                        <a class="d-block col-md-6" href="http://blog.marekbartik.com/posts/2018-03-24_autoscale-nginx-and-phpfpm-independently-on-google-kubernetes-engine/"> &laquo; Autoscale nginx and php-fpm independently on Kubernetes</a>
                     
                     
                     <div class="clearfix"></div>

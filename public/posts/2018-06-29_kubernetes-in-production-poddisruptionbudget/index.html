@@ -4,7 +4,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	<meta name="generator" content="Hugo 0.59.0" />
 	
-	<title>Kubernetes in production — PodDisruptionBudget | Marek Bartík | blog</title>
+	<title>Kubernetes in production — PodDisruptionBudget | marekbartik.com | tech blog</title>
 	
 	
 
@@ -12,14 +12,10 @@
 <meta name="twitter:image" content="http://blog.marekbartik.com/posts/2018-06-29_kubernetes-in-production-poddisruptionbudget/images/1.png"/>
 
 <meta name="twitter:title" content="Kubernetes in production — PodDisruptionBudget"/>
-<meta name="twitter:description" content="How to manage disruptions in Kubernetes? Setting a proper RollingUpdate strategy specs solves only one type of disruption.
-What about other disruptions?
-my baby’s on fire [source: google images]"/>
+<meta name="twitter:description" content="How to manage disruptions in Kubernetes? Setting a proper RollingUpdate strategy specs solves only one type of disruption. What about other disruptions like deleting deployments on accident, network partitions, kernel panics, hardware failures, pod evictions?"/>
 
 	<meta property="og:title" content="Kubernetes in production — PodDisruptionBudget" />
-<meta property="og:description" content="How to manage disruptions in Kubernetes? Setting a proper RollingUpdate strategy specs solves only one type of disruption.
-What about other disruptions?
-my baby’s on fire [source: google images]" />
+<meta property="og:description" content="How to manage disruptions in Kubernetes? Setting a proper RollingUpdate strategy specs solves only one type of disruption. What about other disruptions like deleting deployments on accident, network partitions, kernel panics, hardware failures, pod evictions?" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="http://blog.marekbartik.com/posts/2018-06-29_kubernetes-in-production-poddisruptionbudget/" />
 
@@ -42,7 +38,7 @@ my baby’s on fire [source: google images]" />
         <a class="navbar-brand" href="http://blog.marekbartik.com//">
 
             
-            <span style="font-family:Righteous;">Marek Bartík | blog</span>
+            <span style="font-family:Righteous;">marekbartik.com | tech blog</span>
             
         </a>
         
@@ -62,15 +58,7 @@ my baby’s on fire [source: google images]" />
                 </li>
                  
                 <li class="nav-item ">
-                    <a class="nav-link" href="/separate">Separate</a>
-                </li>
-                 
-                <li class="nav-item ">
                     <a class="nav-link" href="/">About Me</a>
-                </li>
-                 
-                <li class="nav-item ">
-                    <a class="nav-link" href="/static/imprint">Imprint</a>
                 </li>
                 
             </ul>
@@ -83,9 +71,9 @@ my baby’s on fire [source: google images]" />
         <div class="site-content">   
             <div class="container">
 <div class="mainheading">
-    <h1 class="sitetitle">Marek Bartík | blog</h1>
+    <h1 class="sitetitle">marekbartik.com | tech blog</h1>
     <p class="lead">
-         the clean blog!
+         
     </p>
 </div><div class="main-content">
         
@@ -123,6 +111,24 @@ my baby’s on fire [source: google images]" />
                         	
                         
                         
+                        
+                        <div class="row post-top-meta">
+                            <div class="col-xs-12 col-md-3 col-lg-2 text-center text-md-left mb-4 mb-md-0 md-nopad-right">
+                                <img class="author-thumb" src="/images/author.jpg" alt="Marek Bartík">
+                            </div>
+                            <div class="col-xs-12 col-md-9 col-lg-10 text-center text-md-left md-nopad-left">
+                                <a target="_blank" class="link-dark">Marek Bartík</a><br>
+                                <span class="author-description">
+                                    Creator of this blog.<br>
+                                    <i class="far fa-star"></i>
+                                    Jun 29, 2018
+                                    <i class="far fa-clock clock"></i>
+                                    5 min read
+                                </span>					
+                            </div>
+                        </div>			
+                        	
+                        
                                                 
                         
                         <h1 class="posttitle">Kubernetes in production — PodDisruptionBudget</h1> 
@@ -137,13 +143,9 @@ my baby’s on fire [source: google images]" />
                     <div class="article-post">
                         
 
-<p>How to manage disruptions in Kubernetes? Setting a proper RollingUpdate strategy specs solves only one type of disruption.</p>
+<p>How to manage disruptions in Kubernetes? Setting a proper RollingUpdate strategy specs solves only one type of disruption. What about other disruptions like deleting deployments on accident, network partitions, kernel panics, hardware failures, pod evictions?</p>
 
-<p>What about other disruptions?</p>
-
-<p><img src="/posts/2018-06-29_kubernetes-in-production-poddisruptionbudget/images/1.png" alt="image" /></p>
-
-<p>my baby’s on fire [source: google images]</p>
+<p>PodDisruptionBudget for the win!</p>
 
 <h3 id="voluntary-and-involuntary-disruptions">Voluntary and Involuntary Disruptions</h3>
 
@@ -188,14 +190,15 @@ my baby’s on fire [source: google images]" />
 
 <h3 id="poddisruptionbudget">PodDisruptionBudget</h3>
 
-<p>An Application Owner can create a <code>**PodDisruptionBudget**</code> object (PDB) for each application. A PDB limits the number pods of a replicated application that are down simultaneously from voluntary disruptions. For example, a quorum-based application would like to ensure that the number of replicas running is never brought below the number needed for a quorum. A web front end might want to ensure that the number of replicas serving load never falls below a certain percentage of the total.</p>
+<p>An Application Owner can create a <code>PodDisruptionBudget</code> object (PDB) for each application. A PDB limits the number pods of a replicated application that are down simultaneously from voluntary disruptions. For example, a quorum-based application would like to ensure that the number of replicas running is never brought below the number needed for a quorum. A web front end might want to ensure that the number of replicas serving load never falls below a certain percentage of the total.</p>
 
-<p>Cluster managers and hosting providers should use tools which respect Pod Disruption Budgets by calling the <a href="https://kubernetes.io/docs/tasks/administer-cluster/safely-drain-node/#the-eviction-api">Eviction API</a> instead of directly deleting pods. Examples are the <code>**kubectl drain**</code> command and the Kubernetes-on-GCE cluster upgrade script (<code>**cluster/gce/upgrade.sh**</code>).</p>
+<p>Cluster managers and hosting providers should use tools which respect Pod Disruption Budgets by calling the <a href="https://kubernetes.io/docs/tasks/administer-cluster/safely-drain-node/#the-eviction-api">Eviction API</a> instead of directly deleting pods. Examples are the <code>kubectl drain</code> command and the Kubernetes-on-GCE cluster upgrade script <code>cluster/gce/upgrade.sh</code> .</p>
 
-<p>When a cluster administrator wants to drain a node they use the <code>**kubectl drain**</code> command. That tool tries to evict all the pods on the machine. The eviction request may be temporarily rejected, and the tool periodically retries all failed requests until all pods are terminated, or until a configurable timeout is reached.</p>
+<p>When a cluster administrator wants to drain a node they use the <code>kubectl drain</code> command. That tool tries to evict all the pods on the machine. The eviction request may be temporarily rejected, and the tool periodically retries all failed requests until all pods are terminated, or until a configurable timeout is reached.</p>
 
-<p>Example PDB Using minAvailable:
-<code>**apiVersion: policy/v1beta1  
+<p>Example PDB Using minAvailable:</p>
+
+<pre><code class="language-yaml">apiVersion: policy/v1beta1  
 kind: PodDisruptionBudget  
 metadata:  
   name: zk-pdb  
@@ -203,10 +206,12 @@ spec:
   minAvailable: 2  
   selector:  
     matchLabels:  
-      app: zookeeper**</code></p>
+      app: zookeeper
+</code></pre>
 
-<p>Example PDB Using maxUnavailable (Kubernetes 1.7 or higher):
-<code>**apiVersion: policy/v1beta1  
+<p>Example PDB Using maxUnavailable (Kubernetes 1.7 or higher):</p>
+
+<pre><code class="language-yaml">apiVersion: policy/v1beta1  
 kind: PodDisruptionBudget  
 metadata:  
   name: zk-pdb  
@@ -214,71 +219,85 @@ spec:
   maxUnavailable: 1  
   selector:  
     matchLabels:  
-      app: zookeeper**</code>### Helm</p>
+      app: zookeeper
+</code></pre>
+
+<h3 id="helm">Helm</h3>
 
 <p>use this in your Chart!</p>
 
-<p>templates/pdb.yaml:
-<code>**{{- if .Values.budget.minAvailable -}}**  
+<pre><code class="language-golang">// templates/pdb.yaml
+{{- if .Values.budget.minAvailable -}}
 apiVersion: policy/v1beta1  
 kind: PodDisruptionBudget  
 metadata:  
-  name: {{ template &amp;#34;app.fullname&amp;#34; . }}  
+  name: {{ template &quot;app.fullname&quot; . }}  
   namespace: {{ .Values.namespace }}  
   labels:  
-    app: {{ template &amp;#34;app.name&amp;#34; . }}  
-    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace &amp;#34;+&amp;#34; &amp;#34;_&amp;#34; }}  
+    app: {{ template &quot;app.name&quot; . }}  
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace &quot;+&quot; &quot;_&quot; }}  
     release: {{ .Release.Name }}  
     heritage: {{ .Release.Service }}  
 spec:  
   selector:  
     matchLabels:  
-      app: {{ template &amp;#34;app.name&amp;#34; . }}  
+      app: {{ template &quot;app.name&quot; . }}  
       env: {{ .Values.env.name }}  
   minAvailable: **{{ .Values.budget.minAvailable }}**  
-**{{- end -}}**</code></p>
+{{- end -}}
+</code></pre>
 
 <p>Imagine you have a service with 2 replicas and you need at least 1 to be available even during node upgrades and other ops tasks.</p>
 
-<p>install / upgrade your release:
-<code>helm upgrade --install --debug &amp;#34;$RELEASE_NAME&amp;#34; -f helm/values.yaml \ **--set replicas=2,budget.minAvailable=1** myrepo/mychart</code></p>
+<p>install / upgrade your release:</p>
 
-<p>kubectl describe pdb “$RELEASE_NAME”
-<code>Name: mysvc-prod  
+<pre><code class="language-bash">helm upgrade --install --debug &quot;$RELEASE_NAME&quot; -f helm/values.yaml \
+  --set replicas=2,budget.minAvailable=1** myrepo/mychart
+</code></pre>
+
+<p>run <code>kubectl describe pdb &quot;$RELEASE_NAME&quot;</code></p>
+
+<pre><code>Name: mysvc-prod  
 Namespace: prod  
 Min available: 1  
 Selector: app=myservice,env=prod  
 Status:  
- **Allowed disruptions: 1  
+ Allowed disruptions: 1  
  Current: 2  
  Desired: 1  
- Total: 2**  
-Events: &amp;lt;none&amp;gt;</code></p>
+ Total: 2  
+Events: &lt;none&gt;
+</code></pre>
 
-<p>drain a node with one of your pods running:
-<code>kubectl drain --delete-local-data --force --ignore-daemonsets gke-mycluster-prod-pool-2fca4c85-k6g5</code><code>node &amp;#34;gke-mycluster-prod-pool-2fca4c85-k6g5&amp;#34; already cordoned  
+<p>drain a node with one of your pods running:</p>
+
+<pre><code class="language-bash">kubectl drain --delete-local-data --force --ignore-daemonsets gke-mycluster-prod-pool-2fca4c85-k6g5
+node &quot;gke-mycluster-prod-pool-2fca4c85-k6g5&quot; already cordoned  
 WARNING: Deleting pods with local storage: sqlproxy-67f695889d-t778w; Ignoring DaemonSet-managed pods: fluentd-gcp-v3.0.0-llp5s; Deleting pods not managed by ReplicationController, ReplicaSet, Job, DaemonSet or StatefulSet: kube-proxy-gke-testing-dev-pool-2fca4c85-k6g5  
-pod &amp;#34;tiller-deploy-7b7b795779-rcvkd&amp;#34; evicted  
-**pod &amp;#34;mysvc-prod-6856d59f9b-lzrtf&amp;#34; evicted**  
-node &amp;#34;gke-mycluster-prod-pool-2fca4c85-k6g5&amp;#34; drained</code></p>
+pod &quot;tiller-deploy-7b7b795779-rcvkd&quot; evicted  
+pod &quot;mysvc-prod-6856d59f9b-lzrtf&quot; evicted
+node &quot;gke-mycluster-prod-pool-2fca4c85-k6g5&quot; drained
+</code></pre>
 
-<p>again: kubectl describe pdb “$RELEASE_NAME”
-<code>Name: mysvc-prod  
+<p>again run <code>kubectl describe pdb &quot;$RELEASE_NAME&quot;</code></p>
+
+<pre><code>Name: mysvc-prod  
 Namespace: prod  
 Min available: 1  
 Selector: app=myservice,env=prod  
 Status:  
- **Allowed disruptions: 0  
+ Allowed disruptions: 0  
  Current: 1  
  Desired: 1  
- Total: 2**  
-Events: &amp;lt;none&amp;gt;</code></p>
+ Total: 2  
+Events: &lt;none&gt;`
+</code></pre>
 
 <p>Tadaaa! We drained a node without any disruptions of our service.</p>
 
 <h3 id="pdb-with-1-replica-only">PDB with 1 replica only?</h3>
 
-<p>If we had 1 replica only, the <a href="https://github.com/kubernetes/kubernetes/issues/48307"><strong>kubectl drain would get stuck</strong></a> <strong>always</strong>. Node drains / upgrades would need to be solved manually.</p>
+<p>If we had 1 replica only, the <a href="https://github.com/kubernetes/kubernetes/issues/48307">kubectl drain would get stuck</a> <strong>always</strong>. Node drains / upgrades would need to be solved manually.</p>
 
 <p>You might expect the eviction API would try to surge a replica to comply with the minAvailable condition, instead the drain gets stuck and it is your responsibility to solve this situation yourself. Is it a <strong>bug or feature</strong>? The Kubernetes community says you shouldn’t use 1 replica in production at all if you want HA, which is fair :)</p>
 
@@ -286,15 +305,20 @@ Events: &amp;lt;none&amp;gt;</code></p>
 
 <p>If you don’t want your kubectl drains to get stuck, you might want to use PDB for deployments with more than 1 replica.</p>
 
-<p>Edit your templates/pdb.yaml:
-<code>{{- if .Values.budget.minAvailable -}}  
+<p>Edit your helm template</p>
+
+<pre><code class="language-golang">// templates/pdb.yaml
+{{- if .Values.budget.minAvailable -}}  
 **{{- if gt .Values.replicaCount 1 -}}**  
 apiVersion: policy/v1beta1  
 kind: PodDisruptionBudget  
 metadata:  
 ...  
-**{{- end -}}**  
-{{- end -}}</code>### How to perform Disruptive Actions on your Cluster</p>
+{{- end -}}  
+{{- end -}}
+</code></pre>
+
+<h3 id="how-to-perform-disruptive-actions-on-your-cluster">How to perform Disruptive Actions on your Cluster</h3>
 
 <p>If you are a Cluster Administrator, and you need to perform a disruptive action on all the nodes in your cluster, such as a node or system software upgrade, here are some options:</p>
 
@@ -312,10 +336,12 @@ metadata:
 <li>No downtime.</li>
 <li>Minimal resource duplication.</li>
 <li>Allows more automation of cluster administration.</li>
-<li>Writing disruption-tolerant applications is tricky, but the work to tolerate voluntary disruptions largely overlaps with work to support autoscaling and tolerating involuntary disruptions.Sources:<br />
-docs <a href="https://kubernetes.io/docs/concepts/workloads/pods/disruptions/">https://kubernetes.io/docs/concepts/workloads/pods/disruptions/</a><br />
-magic</li>
+<li>Writing disruption-tolerant applications is tricky, but the work to tolerate voluntary disruptions largely overlaps with work to support autoscaling and tolerating involuntary disruptions.</li>
 </ul>
+
+<h3 id="links">Links</h3>
+
+<p>docs <a href="https://kubernetes.io/docs/concepts/workloads/pods/disruptions/">https://kubernetes.io/docs/concepts/workloads/pods/disruptions/</a></p>
 
                     </div>
                     
@@ -330,10 +356,10 @@ magic</li>
                     
                     <div class="row PageNavigation d-flex justify-content-between font-weight-bold">
                     
-                        <a class="d-block col-md-6" href="http://blog.marekbartik.com/posts/2019-01-26_gcp-stackdriver-logging-export-to-bucket-and-extract-textpayload-from-json-with-cloud-functions/"> &laquo; GCP Stackdriver Logging export to bucket and extract textPayload from json with Cloud Functions</a>
+                        <a class="d-block col-md-6" href="http://blog.marekbartik.com/posts/2019-01-26_gcp-stackdriver-logging-export-to-bucket-and-extract-textpayload-from-json-with-cloud-functions/"> &laquo; Stackdriver Logging - json log transformations using Cloud Functions</a>
                     
                     
-                        <a class="d-block col-md-6 text-lg-right" href="http://blog.marekbartik.com/posts/2018-03-24_autoscale-nginx-and-phpfpm-independently-on-google-kubernetes-engine/">Autoscale nginx and php-fpm independently on Google Kubernetes Engine &raquo;</a>
+                        <a class="d-block col-md-6 text-lg-right" href="http://blog.marekbartik.com/posts/2018-03-24_autoscale-nginx-and-phpfpm-independently-on-google-kubernetes-engine/">Autoscale nginx and php-fpm independently on Kubernetes &raquo;</a>
                     
                     <div class="clearfix"></div>
                     </div>

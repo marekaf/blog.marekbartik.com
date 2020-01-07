@@ -4,17 +4,17 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	<meta name="generator" content="Hugo 0.59.0" />
 	
-	<title>GCP Stackdriver Logging export to bucket and extract textPayload from json with Cloud Functions | Marek Bartík | blog</title>
+	<title>Stackdriver Logging - json log transformations using Cloud Functions | marekbartik.com | tech blog</title>
 	
 	
 
 	<meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:image" content="http://blog.marekbartik.com/posts/2019-01-26_gcp-stackdriver-logging-export-to-bucket-and-extract-textpayload-from-json-with-cloud-functions/images/1.png"/>
 
-<meta name="twitter:title" content="GCP Stackdriver Logging export to bucket and extract textPayload from json with Cloud Functions"/>
+<meta name="twitter:title" content="Stackdriver Logging - json log transformations using Cloud Functions"/>
 <meta name="twitter:description" content="Stackdriver Logging can get expensive. Sometimes you don’t need to query/store all your application logs in Stackdriver, especially dev logs. Or you simply don’t like Stackdriver (wink wink)."/>
 
-	<meta property="og:title" content="GCP Stackdriver Logging export to bucket and extract textPayload from json with Cloud Functions" />
+	<meta property="og:title" content="Stackdriver Logging - json log transformations using Cloud Functions" />
 <meta property="og:description" content="Stackdriver Logging can get expensive. Sometimes you don’t need to query/store all your application logs in Stackdriver, especially dev logs. Or you simply don’t like Stackdriver (wink wink)." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="http://blog.marekbartik.com/posts/2019-01-26_gcp-stackdriver-logging-export-to-bucket-and-extract-textpayload-from-json-with-cloud-functions/" />
@@ -40,7 +40,7 @@
         <a class="navbar-brand" href="http://blog.marekbartik.com//">
 
             
-            <span style="font-family:Righteous;">Marek Bartík | blog</span>
+            <span style="font-family:Righteous;">marekbartik.com | tech blog</span>
             
         </a>
         
@@ -60,15 +60,7 @@
                 </li>
                  
                 <li class="nav-item ">
-                    <a class="nav-link" href="/separate">Separate</a>
-                </li>
-                 
-                <li class="nav-item ">
                     <a class="nav-link" href="/">About Me</a>
-                </li>
-                 
-                <li class="nav-item ">
-                    <a class="nav-link" href="/static/imprint">Imprint</a>
                 </li>
                 
             </ul>
@@ -81,9 +73,9 @@
         <div class="site-content">   
             <div class="container">
 <div class="mainheading">
-    <h1 class="sitetitle">Marek Bartík | blog</h1>
+    <h1 class="sitetitle">marekbartik.com | tech blog</h1>
     <p class="lead">
-         the clean blog!
+         
     </p>
 </div><div class="main-content">
         
@@ -94,7 +86,7 @@
     <p>Share</p>
     <ul>
         <li class="ml-1 mr-1">
-        <a target="_blank" href="https://twitter.com/intent/tweet?text=GCP%20Stackdriver%20Logging%20export%20to%20bucket%20and%20extract%20textPayload%20from%20json%20with%20Cloud%20Functions&url=http%3a%2f%2fblog.marekbartik.com%2fposts%2f2019-01-26_gcp-stackdriver-logging-export-to-bucket-and-extract-textpayload-from-json-with-cloud-functions%2f" onclick="window.open(this.href, 'twitter-share', 'width=550,height=435');return false;">
+        <a target="_blank" href="https://twitter.com/intent/tweet?text=Stackdriver%20Logging%20-%20json%20log%20transformations%20using%20Cloud%20Functions&url=http%3a%2f%2fblog.marekbartik.com%2fposts%2f2019-01-26_gcp-stackdriver-logging-export-to-bucket-and-extract-textpayload-from-json-with-cloud-functions%2f" onclick="window.open(this.href, 'twitter-share', 'width=550,height=435');return false;">
         <i class="fab fa-twitter"></i>
         </a>
         </li>
@@ -121,9 +113,27 @@
                         	
                         
                         
+                        
+                        <div class="row post-top-meta">
+                            <div class="col-xs-12 col-md-3 col-lg-2 text-center text-md-left mb-4 mb-md-0 md-nopad-right">
+                                <img class="author-thumb" src="/images/author.jpg" alt="Marek Bartík">
+                            </div>
+                            <div class="col-xs-12 col-md-9 col-lg-10 text-center text-md-left md-nopad-left">
+                                <a target="_blank" class="link-dark">Marek Bartík</a><br>
+                                <span class="author-description">
+                                    Creator of this blog.<br>
+                                    <i class="far fa-star"></i>
+                                    Jan 26, 2019
+                                    <i class="far fa-clock clock"></i>
+                                    5 min read
+                                </span>					
+                            </div>
+                        </div>			
+                        	
+                        
                                                 
                         
-                        <h1 class="posttitle">GCP Stackdriver Logging export to bucket and extract textPayload from json with Cloud Functions</h1> 
+                        <h1 class="posttitle">Stackdriver Logging - json log transformations using Cloud Functions</h1> 
                     </div>
 
                     
@@ -135,30 +145,39 @@
                     <div class="article-post">
                         
 
-<p>Stackdriver Logging can get expensive. Sometimes you don’t need to query/store all your application logs in Stackdriver, especially dev logs. Or you simply don’t like Stackdriver (wink wink). On GCP you can export your logs to Google Storage Bucket automatically. Every hour there is a json file containing your logs and its metadata. What if you need just the raw logs though?With Stackdriver Logging you pay for log ingestion. There’s also <a href="https://cloud.google.com/logging/quotas#logs_retention_periods">log retention of 30 days only</a>! What if I want to store my logs for longer time? What if I don’t want to pay so much for my dev logs? What if I’m using a different tools for log analysis?</p>
+<p>Stackdriver Logging can get expensive. Sometimes you don’t need to query/store all your application logs in Stackdriver, especially dev logs. Or you simply don’t like Stackdriver (wink wink).</p>
 
-<p>Stackdriver Logging has two additional services for this: Export and Exlusions. See the diagram below:</p>
+<p>On GCP you can export your logs to Google Storage Bucket automatically. Every hour there is a json file containing your logs and its metadata. What if you need just the raw logs though?With Stackdriver Logging you pay for log ingestion. There’s also <a href="https://cloud.google.com/logging/quotas#logs_retention_periods">log retention of 30 days only</a>!</p>
 
-<p><img src="/posts/2019-01-26_gcp-stackdriver-logging-export-to-bucket-and-extract-textpayload-from-json-with-cloud-functions/images/1.png" alt="image" /></p>
+<p>What if I want to store my logs for longer time? What if I don’t want to pay so much for my dev logs? What if I’m using a different tools for log analysis?</p>
+
+<h2 id="stackdriver-logging-architecture">Stackdriver Logging architecture</h2>
+
+<p>Stackdriver Logging has two additional services beside logging: Export and Exlusions. See the diagram below.</p>
+
+<p>Google Cloud Platform Logging Architecture:
+<img src="/posts/2019-01-26_gcp-stackdriver-logging-export-to-bucket-and-extract-textpayload-from-json-with-cloud-functions/images/1.png" alt="Google Cloud Platform Logging Architecture" /></p>
 
 <p>Google Cloud Platform Logging Architecture, source: <a href="https://cloud.google.com/logging/docs/export/">https://cloud.google.com/logging/docs/export/</a></p>
 
-<h3 id="stackdriver-logging-exclusions">Stackdriver Logging Exclusions</h3>
+<h3 id="exclusions">Exclusions</h3>
 
-<p>You can exclude logs based on their resource type or write more complex exclusion queries like:
-&gt; resource.type=”container”<br />
-&gt; AND labels.”container.googleapis.com/namespace_name”=”devel”<br />
-&gt; AND severity &gt; INFO</p>
+<p>You can exclude logs based on their resource type or write more complex exclusion queries like:</p>
 
-<p>this excludes all GKE container logs from k8s namespace called “devel” that have severity greater than INFO (basically here just everything from stderr)</p>
+<pre><code>resource.type=&quot;container&quot;   
+  AND labels.&quot;container.googleapis.com/namespace_name&quot;=&quot;devel&quot;   
+  AND severity &gt; INFO
+</code></pre>
 
-<p>And you can set to exclude just 99% of those logs to be discarded! (or any other number from 0–100%).</p>
+<p>this excludes all GKE container logs from k8s namespace called &ldquo;devel&rdquo; that have severity greater than INFO (basically here just everything from stderr)</p>
 
-<h3 id="stackdriver-logging-exports">Stackdriver Logging Exports</h3>
+<p>And you can set 99% of those logs to be discarded! (or any other number from 0–100%).</p>
+
+<h3 id="exports">Exports</h3>
 
 <p>The great thing about this architecture is, that Exports are independent of Exclusions. If I want to Export some logs to BigQuery or Bucket I can let them to be ingested by Stackdriver at the same time or Exclude them to save some money. So creating an Exclusion does not affect my Exports and that’s pretty dope.</p>
 
-<p>Exports are either batch or streamed. Export to bucket is batched (every hour one file named with the timestamp is created) and this can’t be changed afaik. Exports to BigQuery and Pub/Sub are streamed. You will pay for the streamed volume to BigQuery or Pub/Sub pricing accordingly. In Either case you will pay for the storage as well.</p>
+<p>Exports are either batched or streamed. Export to bucket is batched (every hour one file named with the timestamp is created) and this can’t be changed afaik. Exports to BigQuery and Pub/Sub are streamed. You will pay for the streamed volume to BigQuery or Pub/Sub pricing accordingly. In either case you will pay for the storage as well.</p>
 
 <h3 id="export-logs-to-google-storage-bucket">Export logs to Google Storage Bucket</h3>
 
@@ -166,8 +185,35 @@
 
 <p>Delay: around 10:10am you’ll get logs collected in time window of 9:00–10:00am and there’s nothing to guarantee that delivery time, sometimes it gets delayed even more. Not suitable for (near-)realtime log processing.</p>
 
-<p>Log format: each line looks like this
-&gt; {“insertId”:”9pxrl4ffvybrn”,”labels”:{“compute.googleapis.com/resource_name”:”fluentd-gcp-v3.1.0–2bmxq”,”container.googleapis.com/namespace_name”:”prod”,”container.googleapis.com/pod_name”:”my-app-6b495f4d8b-9l2gb”,”container.googleapis.com/stream”:”stdout”},”logName”:”projects/my-project/logs/my-app”,”receiveTimestamp”:”2019–01–26T00:00:02.198052458Z”,”resource”:{“labels”:{“cluster_name”:”prod-cluster”,”container_name”:”myapp”,”instance_id”:”4164682295655914646&#34;,”namespace_id”:”prod”,”pod_id”:”my-app-6b495f4d8b-9l2gb”,”project_id”:”my-project”,”zone”:”europe-west1-b”},”type”:”container”},”severity”:”INFO”,”textPayload”:”2019–01–26 01:00:00.788 INFO [:] DispatcherServlet:102 — Request in 3155 ms: /my/endpoint/ : 1.2.3.4 : Mozilla/5.0 (compatible; bingbot/2.0; +<a href="http://www.bing.com/bingbot.htm)n&amp;#34;,&amp;#34;timestamp&amp;#34;:&amp;#34;2019-01-26T00:00:00Z&amp;#34;">http://www.bing.com/bingbot.htm)n&amp;#34;,&amp;#34;timestamp&amp;#34;:&amp;#34;2019-01-26T00:00:00Z&amp;#34;</a>}</p>
+<p>Log format: each line looks like this</p>
+
+<pre><code class="language-json">{
+  &quot;insertId&quot;: &quot;9pxrl4ffvybrn&quot;,
+  &quot;labels&quot;: {
+    &quot;compute.googleapis.com/resource_name&quot;: &quot;fluentd-gcp-v3.1.0–2bmxq&quot;,
+    &quot;container.googleapis.com/namespace_name&quot;: &quot;prod&quot;,
+    &quot;container.googleapis.com/pod_name&quot;: &quot;my-app-6b495f4d8b-9l2gb&quot;,
+    &quot;container.googleapis.com/stream&quot;: &quot;stdout&quot;
+  },
+  &quot;logName&quot;: &quot;projects/my-project/logs/my-app&quot;,
+  &quot;receiveTimestamp&quot;: &quot;2019–01–26T00:00:02.198052458Z&quot;,
+  &quot;resource&quot;: {
+    &quot;labels&quot;: {
+      &quot;cluster_name&quot;: &quot;prod-cluster&quot;,
+      &quot;container_name&quot;: &quot;myapp&quot;,
+      &quot;instance_id&quot;: &quot;4164682295655914646&quot;,
+      &quot;namespace_id&quot;: &quot;prod&quot;,
+      &quot;pod_id&quot;: &quot;my-app-6b495f4d8b-9l2gb&quot;,
+      &quot;project_id&quot;: &quot;my-project&quot;,
+      &quot;zone&quot;: &quot;europe-west1-b&quot;
+    },
+    &quot;type&quot;: &quot;container&quot;
+  },
+  &quot;severity&quot;: &quot;INFO&quot;,
+  &quot;textPayload&quot;: &quot;2019–01–26 01:00:00.788 INFO [:] DispatcherServlet:102 — Request in 3155 ms: /my/endpoint/ : 1.2.3.4 : Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)\n&quot;,
+  &quot;timestamp&quot;: &quot;2019-01-26T00:00:00Z&quot;
+}
+</code></pre>
 
 <p>You cannot do anything neither about the delay nor about the log format…</p>
 
@@ -177,117 +223,125 @@
 
 <p>You can use <a href="https://cloud.google.com/functions/">Cloud Functions</a> to process the exported log file in the bucket.</p>
 
-<p>Use the<code>--trigger-event google.storage.object.finalize</code> to execute the Cloud Function when this event on a particular bucket happens. This basically means that changing any file in some bucket will create this event and Cloud Function will consume that event and fire up a function to process it. For other <a href="https://cloud.google.com/functions/features/">supported event sources see the documentation</a>.</p>
+<p>Use the <code>--trigger-event google.storage.object.finalize</code> to execute the Cloud Function when this event on a particular bucket happens. This basically means that changing any file in some bucket will create this event and Cloud Function will consume that event and fire up a function to process it. For other <a href="https://cloud.google.com/functions/features/">supported event sources see the documentation</a>.</p>
 
-<p>We will use nodejs-6 runtime for the Cloud Function.
-`&#39;use strict&#39;;</p>
+<p>We will use <code>nodejs-6</code> runtime for the Cloud Function.</p>
 
-<p>const path = require(&#39;path&#39;);<br />
-const fs = require(&#39;fs&#39;);<br />
-const Storage = require(&#39;@google-cloud/storage&#39;);<br />
-const readline = require(&#39;readline&#39;);</p>
+<pre><code class="language-javascript">'use strict';
 
-<p>const DEST_BUCKET_NAME = process.env.DEST_BUCKET_NAME;</p>
+const path = require('path');
+const fs = require('fs');
+const Storage = require('@google-cloud/storage');
+const readline = require('readline');
 
-<p>// Instantiates a client<br />
-const storage = Storage();`</p>
+const DEST_BUCKET_NAME = process.env.DEST_BUCKET_NAME;
+
+// Instantiates a client
+const storage = Storage();
+</code></pre>
 
 <p>We initialized some global vars and imported libs to work with Google Cloud Storage</p>
 
-<p>Next, we will define some helper functions:
-`function getFileStream (file) {<br />
-  if (!file.bucket) {<br />
-    throw new Error(&#39;Bucket not provided. Make sure you have a &#34;bucket&#34; property in your request&#39;);<br />
-  }<br />
-  if (!file.name) {<br />
-    throw new Error(&#39;Filename not provided. Make sure you have a &#34;name&#34; property in your request&#39;);<br />
-  }</p>
+<p>Next, we will define some helper functions:</p>
 
-<p>return storage.bucket(file.bucket).file(file.name).createReadStream();<br />
-}`</p>
+<pre><code class="language-javascript">function getFileStream (file) {
+  if (!file.bucket) {
+    throw new Error('Bucket not provided. Make sure you have a &quot;bucket&quot; property in your request');
+  }
+  if (!file.name) {
+    throw new Error('Filename not provided. Make sure you have a &quot;name&quot; property in your request');
+  }
 
-<p>Finally the main function:
-`exports.logTransformer = (event, callback) =&gt; {<br />
-  const file = event.data;</p>
-
-<p>const filePath = file.name; // File path in the bucket.<br />
-  const contentType = file.contentType; // File content type.</p>
-
-<p>const destBucket = storage.bucket(DEST_BUCKET_NAME);</p>
-
-<p>// Get the file name.<br />
-  const fileName = path.basename(filePath);</p>
-
-<p>const options = {<br />
-    input: getFileStream(file)<br />
-  };</p>
-
-<p>// the output is no longer application/json but text/plain<br />
-  const metadata = {<br />
-    contentType: &#34;text/plain&#34;,<br />
-  };</p>
-
-<p>const logStream = fs.createWriteStream(&#39;/tmp/log.txt&#39;, {flags: &#39;w&#39;, encoding: &#39;utf-8&#39;});</p>
-
-<p>logStream.on(&#39;open&#39;, function() {</p>
-
-<pre><code>readline.createInterface(options)  
-.on(&amp;#39;line&amp;#39;, (line) =&amp;gt; {  
-
-    const clonedData = JSON.parse(line.replace(/\r?\n|\r/g, &amp;#34; &amp;#34;));  
-    logStream.write(clonedData.textPayload.toString());   
-
-})  
-.on(&amp;#39;close&amp;#39;, () =&amp;gt; {  
-  logStream.end(function () { console.log(&amp;#39;logstream end&amp;#39;); });  
-
-});  
+  return storage.bucket(file.bucket).file(file.name).createReadStream();
+}
 </code></pre>
 
-<p>}).on(&#39;finish&#39;, () =&gt; {</p>
+<p>Finally the main function:</p>
 
-<pre><code> // We replace the .json suffix with .txt   
- const thumbFileName = fileName.replace(&amp;#39;.json&amp;#39;,&amp;#39;.txt&amp;#39;);  
- const thumbFilePath = path.join(path.dirname(filePath), thumbFileName);  
+<pre><code class="language-javascript">exports.logTransformer = (event, callback) =&gt; {
+  const file = event.data;
 
-// Uploading the thumbnail.  
-destBucket.upload(&amp;#39;/tmp/log.txt&amp;#39;, {  
-  destination: thumbFilePath,  
-  metadata: metadata,  
-  resumable: false  
-});  
+  const filePath = file.name; // File path in the bucket.
+  const contentType = file.contentType; // File content type.
 
-callback();  
+  const destBucket = storage.bucket(DEST_BUCKET_NAME);
+
+  // Get the file name.
+  const fileName = path.basename(filePath);
+
+  const options = {
+    input: getFileStream(file)
+  };
+
+  // the output is no longer application/json but text/plain
+  const metadata = {
+    contentType: &quot;text/plain&quot;,
+  };
+
+  const logStream = fs.createWriteStream('/tmp/log.txt', {flags: 'w', encoding: 'utf-8'});
+
+  logStream.on('open', function() {
+
+    readline.createInterface(options)
+    .on('line', (line) =&gt; {
+
+        const clonedData = JSON.parse(line.replace(/\r?\n|\r/g, &quot; &quot;));
+        logStream.write(clonedData.textPayload.toString()); 
+      
+    })
+    .on('close', () =&gt; {
+      logStream.end(function () { console.log('logstream end'); });
+
+    });
+  }).on('finish', () =&gt; {
+
+     // We replace the .json suffix with .txt 
+     const thumbFileName = fileName.replace('.json','.txt');
+     const thumbFilePath = path.join(path.dirname(filePath), thumbFileName);
+
+    // Uploading the thumbnail.
+    destBucket.upload('/tmp/log.txt', {
+      destination: thumbFilePath,
+      metadata: metadata,
+      resumable: false
+    });
+    
+    callback();
+  });
+};
 </code></pre>
-
-<p>});<br />
-};`</p>
 
 <p>And that’s about it! Save that to index.js a don’t forget to include dependencies in package.json.</p>
 
 <h3 id="deploy-it">Deploy it</h3>
 
-<p>Simply deploy it via gcloud CLI
-``SOURCE_BUCKET_NAME=my-bucket-exported-logs<br />
-DEST_BUCKET_NAME=my-bucket-exported-logs-nojson</p>
+<p>Simply deploy it via gcloud CLI</p>
 
-<p>gcloud beta functions deploy logTransformer \<br />
-   &ndash;set-env-vars DEST_BUCKET_NAME=&#34;$DEST_BUCKET_NAME&#34; \<br />
-   &ndash;runtime nodejs6 \<br />
-   &ndash;region europe-west1 \<br />
-   &ndash;memory 128MB  \<br />
-   &ndash;trigger-resource &#34;$SOURCE_BUCKET_NAME&#34; \<br />
-   &ndash;trigger-event google.storage.object.finalize``</p>
+<pre><code class="language-bash">SOURCE_BUCKET_NAME=my-bucket-exported-logs
+DEST_BUCKET_NAME=my-bucket-exported-logs-nojson
 
-<p><img src="/posts/2019-01-26_gcp-stackdriver-logging-export-to-bucket-and-extract-textpayload-from-json-with-cloud-functions/images/2.png" alt="image" /></p>
+gcloud beta functions deploy logTransformer \ 
+   --set-env-vars DEST_BUCKET_NAME=&quot;$DEST_BUCKET_NAME&quot; \
+   --runtime nodejs6 \
+   --region europe-west1 \
+   --memory 128MB  \
+   --trigger-resource &quot;$SOURCE_BUCKET_NAME&quot; \
+   --trigger-event google.storage.object.finalize
+</code></pre>
 
-<p>Cloud Functions come with handy out-of-box monitoring dashboard — Execution Time here</p>
+<p>Cloud Functions come with handy out-of-box monitoring dashboard.</p>
+
+<p>Execution Time here:
+<img src="/posts/2019-01-26_gcp-stackdriver-logging-export-to-bucket-and-extract-textpayload-from-json-with-cloud-functions/images/2.png" alt="Cloud Functions - Execution Time" title="Cloud Functions - Execution Time" /></p>
 
 <p>Don’t forget to check the ‘View Logs’ (if you didn’t exclude them of course) for troubleshooting.</p>
 
 <p>This month we’ve processed 14GiB with it so far and it’s still covered by the free tier Cloud Functions usage ❤</p>
 
-<p>Source code: <a href="https://github.com/marekaf/gcp-stackdriver-logging-extract-textpayload/blob/master/README.md">https://github.com/marekaf/gcp-stackdriver-logging-extract-textpayload</a></p>
+<h2 id="links">Links</h2>
+
+<p>Source code: <a href="https://github.com/marekaf/gcp-stackdriver-logging-extract-textpayload/blob/master/README.md">https://github.com/marekaf/gcp-stackdriver-logging-extract-textpayload</a>
+Google Cloud Platform Logging Architecture <a href="https://cloud.google.com/logging/docs/export/">https://cloud.google.com/logging/docs/export/</a></p>
 
                     </div>
                     
@@ -302,7 +356,7 @@ DEST_BUCKET_NAME=my-bucket-exported-logs-nojson</p>
                     
                     <div class="row PageNavigation d-flex justify-content-between font-weight-bold">
                     
-                        <a class="d-block col-md-6" href="http://blog.marekbartik.com/posts/2019-04-05_google-kubernetes-enginehorizontalpodautoscaler-with-external-metrics-from-pubsub/"> &laquo; Google Kubernetes Engine — HorizontalPodAutoscaler with external metrics from PubSub</a>
+                        <a class="d-block col-md-6" href="http://blog.marekbartik.com/posts/2019-04-05_google-kubernetes-enginehorizontalpodautoscaler-with-external-metrics-from-pubsub/"> &laquo; HorizontalPodAutoscaler with external metrics from PubSub</a>
                     
                     
                         <a class="d-block col-md-6 text-lg-right" href="http://blog.marekbartik.com/posts/2018-06-29_kubernetes-in-production-poddisruptionbudget/">Kubernetes in production — PodDisruptionBudget &raquo;</a>

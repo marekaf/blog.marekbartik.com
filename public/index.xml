@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Marek Bartík | blog</title>
+    <title>marekbartik.com | tech blog</title>
     <link>http://blog.marekbartik.com/</link>
-    <description>Recent content on Marek Bartík | blog</description>
+    <description>Recent content on marekbartik.com | tech blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>Marek Bartík - All rights reserved</copyright>
@@ -23,16 +23,16 @@ Amazon’s Elastic Container Registry has a feature called Lifecycle Policies to
     </item>
     
     <item>
-      <title>Google Kubernetes Engine — HorizontalPodAutoscaler with external metrics from PubSub</title>
+      <title>HorizontalPodAutoscaler with external metrics from PubSub</title>
       <link>http://blog.marekbartik.com/posts/2019-04-05_google-kubernetes-enginehorizontalpodautoscaler-with-external-metrics-from-pubsub/</link>
       <pubDate>Fri, 05 Apr 2019 12:31:58 +0000</pubDate>
       
       <guid>http://blog.marekbartik.com/posts/2019-04-05_google-kubernetes-enginehorizontalpodautoscaler-with-external-metrics-from-pubsub/</guid>
-      <description>There are certain use cases where scaling horizontally based on cpu usage does not really work well. Let’s say you have a consumer worker pool running in Kubernetes.</description>
+      <description>There are certain use cases where scaling horizontally based on cpu usage does not really work well. Let’s say you have a consumer worker pool running on Google Kubernetes Engine.</description>
     </item>
     
     <item>
-      <title>GCP Stackdriver Logging export to bucket and extract textPayload from json with Cloud Functions</title>
+      <title>Stackdriver Logging - json log transformations using Cloud Functions</title>
       <link>http://blog.marekbartik.com/posts/2019-01-26_gcp-stackdriver-logging-export-to-bucket-and-extract-textpayload-from-json-with-cloud-functions/</link>
       <pubDate>Sat, 26 Jan 2019 16:20:44 +0000</pubDate>
       
@@ -46,13 +46,11 @@ Amazon’s Elastic Container Registry has a feature called Lifecycle Policies to
       <pubDate>Fri, 29 Jun 2018 08:50:55 +0000</pubDate>
       
       <guid>http://blog.marekbartik.com/posts/2018-06-29_kubernetes-in-production-poddisruptionbudget/</guid>
-      <description>How to manage disruptions in Kubernetes? Setting a proper RollingUpdate strategy specs solves only one type of disruption.
-What about other disruptions?
-my baby’s on fire [source: google images]</description>
+      <description>How to manage disruptions in Kubernetes? Setting a proper RollingUpdate strategy specs solves only one type of disruption. What about other disruptions like deleting deployments on accident, network partitions, kernel panics, hardware failures, pod evictions?</description>
     </item>
     
     <item>
-      <title>Autoscale nginx and php-fpm independently on Google Kubernetes Engine</title>
+      <title>Autoscale nginx and php-fpm independently on Kubernetes</title>
       <link>http://blog.marekbartik.com/posts/2018-03-24_autoscale-nginx-and-phpfpm-independently-on-google-kubernetes-engine/</link>
       <pubDate>Sat, 24 Mar 2018 15:43:47 +0000</pubDate>
       
@@ -61,7 +59,7 @@ my baby’s on fire [source: google images]</description>
     </item>
     
     <item>
-      <title>Google Kubernetes Engine &#43; Google Cloud Builder &#43; GitHub for easy and quick CD pipeline</title>
+      <title>Google Kubernetes Engine &#43; Cloud Builder &#43; GitHub for easy and quick CD pipeline</title>
       <link>http://blog.marekbartik.com/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/</link>
       <pubDate>Mon, 26 Feb 2018 09:58:14 +0000</pubDate>
       

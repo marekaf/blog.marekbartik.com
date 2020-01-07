@@ -4,7 +4,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	<meta name="generator" content="Hugo 0.59.0" />
 	
-	<title>Google Container Registry lifecycle policy for images retention | Marek Bartík | blog</title>
+	<title>Google Container Registry lifecycle policy for images retention | marekbartik.com | tech blog</title>
 	
 	
 
@@ -40,7 +40,7 @@ Amazon’s Elastic Container Registry has a feature called Lifecycle Policies to
         <a class="navbar-brand" href="http://blog.marekbartik.com//">
 
             
-            <span style="font-family:Righteous;">Marek Bartík | blog</span>
+            <span style="font-family:Righteous;">marekbartik.com | tech blog</span>
             
         </a>
         
@@ -60,15 +60,7 @@ Amazon’s Elastic Container Registry has a feature called Lifecycle Policies to
                 </li>
                  
                 <li class="nav-item ">
-                    <a class="nav-link" href="/separate">Separate</a>
-                </li>
-                 
-                <li class="nav-item ">
                     <a class="nav-link" href="/">About Me</a>
-                </li>
-                 
-                <li class="nav-item ">
-                    <a class="nav-link" href="/static/imprint">Imprint</a>
                 </li>
                 
             </ul>
@@ -81,9 +73,9 @@ Amazon’s Elastic Container Registry has a feature called Lifecycle Policies to
         <div class="site-content">   
             <div class="container">
 <div class="mainheading">
-    <h1 class="sitetitle">Marek Bartík | blog</h1>
+    <h1 class="sitetitle">marekbartik.com | tech blog</h1>
     <p class="lead">
-         the clean blog!
+         
     </p>
 </div><div class="main-content">
         
@@ -121,6 +113,24 @@ Amazon’s Elastic Container Registry has a feature called Lifecycle Policies to
                         	
                         
                         
+                        
+                        <div class="row post-top-meta">
+                            <div class="col-xs-12 col-md-3 col-lg-2 text-center text-md-left mb-4 mb-md-0 md-nopad-right">
+                                <img class="author-thumb" src="/images/author.jpg" alt="Marek Bartík">
+                            </div>
+                            <div class="col-xs-12 col-md-9 col-lg-10 text-center text-md-left md-nopad-left">
+                                <a target="_blank" class="link-dark">Marek Bartík</a><br>
+                                <span class="author-description">
+                                    Creator of this blog.<br>
+                                    <i class="far fa-star"></i>
+                                    Sep 26, 2019
+                                    <i class="far fa-clock clock"></i>
+                                    3 min read
+                                </span>					
+                            </div>
+                        </div>			
+                        	
+                        
                                                 
                         
                         <h1 class="posttitle">Google Container Registry lifecycle policy for images retention</h1> 
@@ -133,11 +143,17 @@ Amazon’s Elastic Container Registry has a feature called Lifecycle Policies to
 
                     
                     <div class="article-post">
-                        <p>Is your Google Container Registry filling up, taking up storage and becoming expensive? How to handle images retention as a service?</p>
+                        
+
+<p>Is your Google Container Registry filling up, taking up storage and becoming expensive? How to handle images retention as a service?</p>
 
 <p>Amazon’s Elastic Container Registry has a feature called <a href="https://docs.aws.amazon.com/AmazonECR/latest/userguide/LifecyclePolicies.html">Lifecycle Policies</a> to handle images retention. Google doesn’t have this feature. There is a <a href="https://issuetracker.google.com/issues/113559510">feature request in their tracker</a> since Aug 2018 and there is not ETA for it so far…</p>
 
+<h2 id="available-solutions">Available solutions</h2>
+
 <p>There is a popular <a href="https://gist.github.com/ahmetb/7ce6d741bd5baa194a3fac6b1fec8bb7">bash script from Ahmet</a> and <a href="https://github.com/sethvargo/gcr-cleaner">Go in CloudRun from Seth</a> but none of them solve the requirements I needed. What exactly do I need?</p>
+
+<h2 id="problem-description">Problem description</h2>
 
 <p>I want to scan my whole GCR and delete the digests that are:</p>
 
@@ -160,9 +176,8 @@ Amazon’s Elastic Container Registry has a feature called Lifecycle Policies to
 
 <p><em>my-service:123</em> is an image with a tag, but wait, <a href="https://windsock.io/explaining-docker-image-ids/">what is the digest</a>?</p>
 
-<p><img src="/posts/2019-09-26_google-container-registry-lifecycle-policy-for-images-retention/images/1.png" alt="image" /></p>
-
-<p>Image vs Layers, taken from <a href="https://windsock.io/explaining-docker-image-ids/">https://windsock.io/explaining-docker-image-ids/</a></p>
+<p>Image vs Layers, taken from <a href="https://windsock.io/explaining-docker-image-ids/">https://windsock.io/explaining-docker-image-ids/</a>:
+<img src="/posts/2019-09-26_google-container-registry-lifecycle-policy-for-images-retention/images/1.png" alt="Image vs Layers" title="Image vs Layers" /></p>
 
 <p>A docker image digest is an ID (hashing algorithm used and the hash computed). The digest can look like this:</p>
 
@@ -179,6 +194,8 @@ Amazon’s Elastic Container Registry has a feature called Lifecycle Policies to
 <pre><code>gcloud container images delete -q — force-delete-tags \
   eu.gcr.io/my-project/foo/bar/my-service@sha256:296e2378f7a14695b2f53101a3bd443f656f823c46d13bf6406b91e9e9950ef0
 </code></pre>
+
+<h2 id="implementation">Implementation</h2>
 
 <p>Then, what do I need to do?</p>
 
@@ -212,7 +229,9 @@ curl --silent --show-error -u_token:&quot;$ACCESS_TOKEN&quot; -X GET &quot;https
 
 <p>Right now I’m running this in Gitlab-CI pipeline on a cron schedule (once a day) to evaluate it’s dry-run logs for production GCP projects.</p>
 
-<p>I’m planning on rewriting this to python (py-kubeng and docker-py) if Google will not to come up with ETA for this feature :(</p>
+<h2 id="summary">Summary</h2>
+
+<p>I’m planning on rewriting this to python (py-kubeng and docker-py) if Google will not to come up with ETA for this feature.</p>
 
                     </div>
                     
@@ -228,7 +247,7 @@ curl --silent --show-error -u_token:&quot;$ACCESS_TOKEN&quot; -X GET &quot;https
                     <div class="row PageNavigation d-flex justify-content-between font-weight-bold">
                     
                     
-                        <a class="d-block col-md-6 text-lg-right" href="http://blog.marekbartik.com/posts/2019-04-05_google-kubernetes-enginehorizontalpodautoscaler-with-external-metrics-from-pubsub/">Google Kubernetes Engine — HorizontalPodAutoscaler with external metrics from PubSub &raquo;</a>
+                        <a class="d-block col-md-6 text-lg-right" href="http://blog.marekbartik.com/posts/2019-04-05_google-kubernetes-enginehorizontalpodautoscaler-with-external-metrics-from-pubsub/">HorizontalPodAutoscaler with external metrics from PubSub &raquo;</a>
                     
                     <div class="clearfix"></div>
                     </div>

@@ -21,7 +21,12 @@ Is your Google Container Registry filling up, taking up storage and becoming exp
 
 Amazon’s Elastic Container Registry has a feature called [Lifecycle Policies](https://docs.aws.amazon.com/AmazonECR/latest/userguide/LifecyclePolicies.html) to handle images retention. Google doesn’t have this feature. There is a [feature request in their tracker](https://issuetracker.google.com/issues/113559510) since Aug 2018 and there is not ETA for it so far…
 
+
+## Available solutions
+
 There is a popular [bash script from Ahmet](https://gist.github.com/ahmetb/7ce6d741bd5baa194a3fac6b1fec8bb7) and [Go in CloudRun from Seth](https://github.com/sethvargo/gcr-cleaner) but none of them solve the requirements I needed. What exactly do I need?
+
+## Problem description
 
 I want to scan my whole GCR and delete the digests that are:
 
@@ -42,14 +47,8 @@ _123_ is a tag
 
 _my-service:123_ is an image with a tag, but wait, [what is the digest](https://windsock.io/explaining-docker-image-ids/)?
 
-
-
-
-![image](/posts/2019-09-26_google-container-registry-lifecycle-policy-for-images-retention/images/1.png)
-
-Image vs Layers, taken from [https://windsock.io/explaining-docker-image-ids/](https://windsock.io/explaining-docker-image-ids/)
-
-
+Image vs Layers, taken from [https://windsock.io/explaining-docker-image-ids/](https://windsock.io/explaining-docker-image-ids/):
+![Image vs Layers](/posts/2019-09-26_google-container-registry-lifecycle-policy-for-images-retention/images/1.png "Image vs Layers")
 
 A docker image digest is an ID (hashing algorithm used and the hash computed). The digest can look like this:
 
@@ -67,6 +66,8 @@ What I can delete, in order to save some space, is the digest, like this:
 gcloud container images delete -q — force-delete-tags \
   eu.gcr.io/my-project/foo/bar/my-service@sha256:296e2378f7a14695b2f53101a3bd443f656f823c46d13bf6406b91e9e9950ef0
 ```
+
+## Implementation
 
 Then, what do I need to do?
 
@@ -99,5 +100,7 @@ I implemented all of this using _bash/jq_ (yep, that wasn’t a smart idea) and 
 
 Right now I’m running this in Gitlab-CI pipeline on a cron schedule (once a day) to evaluate it’s dry-run logs for production GCP projects.
 
-I’m planning on rewriting this to python (py-kubeng and docker-py) if Google will not to come up with ETA for this feature :(
+## Summary
+
+I’m planning on rewriting this to python (py-kubeng and docker-py) if Google will not to come up with ETA for this feature.
 

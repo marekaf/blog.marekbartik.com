@@ -4,17 +4,17 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	<meta name="generator" content="Hugo 0.59.0" />
 	
-	<title>Autoscale nginx and php-fpm independently on Google Kubernetes Engine | Marek Bartík | blog</title>
+	<title>Autoscale nginx and php-fpm independently on Kubernetes | marekbartik.com | tech blog</title>
 	
 	
 
 	<meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:image" content="http://blog.marekbartik.com/posts/2018-03-24_autoscale-nginx-and-phpfpm-independently-on-google-kubernetes-engine/images/1.jpeg"/>
 
-<meta name="twitter:title" content="Autoscale nginx and php-fpm independently on Google Kubernetes Engine"/>
+<meta name="twitter:title" content="Autoscale nginx and php-fpm independently on Kubernetes"/>
 <meta name="twitter:description" content="Let’s say I have a stateless php app that needs to run 24&frasl;7 and automatically scale up to perform well and scale down to be cost-effective."/>
 
-	<meta property="og:title" content="Autoscale nginx and php-fpm independently on Google Kubernetes Engine" />
+	<meta property="og:title" content="Autoscale nginx and php-fpm independently on Kubernetes" />
 <meta property="og:description" content="Let’s say I have a stateless php app that needs to run 24&frasl;7 and automatically scale up to perform well and scale down to be cost-effective." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="http://blog.marekbartik.com/posts/2018-03-24_autoscale-nginx-and-phpfpm-independently-on-google-kubernetes-engine/" />
@@ -42,7 +42,7 @@
         <a class="navbar-brand" href="http://blog.marekbartik.com//">
 
             
-            <span style="font-family:Righteous;">Marek Bartík | blog</span>
+            <span style="font-family:Righteous;">marekbartik.com | tech blog</span>
             
         </a>
         
@@ -62,15 +62,7 @@
                 </li>
                  
                 <li class="nav-item ">
-                    <a class="nav-link" href="/separate">Separate</a>
-                </li>
-                 
-                <li class="nav-item ">
                     <a class="nav-link" href="/">About Me</a>
-                </li>
-                 
-                <li class="nav-item ">
-                    <a class="nav-link" href="/static/imprint">Imprint</a>
                 </li>
                 
             </ul>
@@ -83,9 +75,9 @@
         <div class="site-content">   
             <div class="container">
 <div class="mainheading">
-    <h1 class="sitetitle">Marek Bartík | blog</h1>
+    <h1 class="sitetitle">marekbartik.com | tech blog</h1>
     <p class="lead">
-         the clean blog!
+         
     </p>
 </div><div class="main-content">
         
@@ -96,7 +88,7 @@
     <p>Share</p>
     <ul>
         <li class="ml-1 mr-1">
-        <a target="_blank" href="https://twitter.com/intent/tweet?text=Autoscale%20nginx%20and%20php-fpm%20independently%20on%20Google%20Kubernetes%20Engine&url=http%3a%2f%2fblog.marekbartik.com%2fposts%2f2018-03-24_autoscale-nginx-and-phpfpm-independently-on-google-kubernetes-engine%2f" onclick="window.open(this.href, 'twitter-share', 'width=550,height=435');return false;">
+        <a target="_blank" href="https://twitter.com/intent/tweet?text=Autoscale%20nginx%20and%20php-fpm%20independently%20on%20Kubernetes&url=http%3a%2f%2fblog.marekbartik.com%2fposts%2f2018-03-24_autoscale-nginx-and-phpfpm-independently-on-google-kubernetes-engine%2f" onclick="window.open(this.href, 'twitter-share', 'width=550,height=435');return false;">
         <i class="fab fa-twitter"></i>
         </a>
         </li>
@@ -123,9 +115,27 @@
                         	
                         
                         
+                        
+                        <div class="row post-top-meta">
+                            <div class="col-xs-12 col-md-3 col-lg-2 text-center text-md-left mb-4 mb-md-0 md-nopad-right">
+                                <img class="author-thumb" src="/images/author.jpg" alt="Marek Bartík">
+                            </div>
+                            <div class="col-xs-12 col-md-9 col-lg-10 text-center text-md-left md-nopad-left">
+                                <a target="_blank" class="link-dark">Marek Bartík</a><br>
+                                <span class="author-description">
+                                    Creator of this blog.<br>
+                                    <i class="far fa-star"></i>
+                                    Mar 24, 2018
+                                    <i class="far fa-clock clock"></i>
+                                    4 min read
+                                </span>					
+                            </div>
+                        </div>			
+                        	
+                        
                                                 
                         
-                        <h1 class="posttitle">Autoscale nginx and php-fpm independently on Google Kubernetes Engine</h1> 
+                        <h1 class="posttitle">Autoscale nginx and php-fpm independently on Kubernetes</h1> 
                     </div>
 
                     
@@ -145,10 +155,9 @@
 
 <h3 id="solution-1">Solution 1:</h3>
 
-<blockquote>
-<p><em>FROM debian<br />
-RUN apt-get update &amp;&amp; apt-get -y install nginx php-fpm</em></p>
-</blockquote>
+<pre><code class="language-Dockerfile">FROM debian  
+RUN apt-get update &amp;amp;&amp;amp; apt-get -y install nginx php-fpm
+</code></pre>
 
 <p><img src="/posts/2018-03-24_autoscale-nginx-and-phpfpm-independently-on-google-kubernetes-engine/images/1.jpeg" alt="image" /></p>
 
@@ -158,20 +167,24 @@ RUN apt-get update &amp;&amp; apt-get -y install nginx php-fpm</em></p>
 
 <h3 id="solution-2">Solution 2:</h3>
 
-<p>Separate the nginx a php-fpm into two images
-&gt; <em>FROM nginx:1.13<br />
-&gt; COPY src/ /code/<br />
-&gt; COPY site.conf /etc/nginx/conf.d/default.conf</em></p>
+<p>Separate the nginx a php-fpm into two images</p>
+
+<pre><code class="language-Dockerfile">FROM nginx:1.13  
+COPY src/ /code/  
+COPY site.conf /etc/nginx/conf.d/default.conf
+</code></pre>
 
 <p>notice the fastcgi_pass and try_files</p>
 
-<p>Then build the php image
-&gt; <em>FROM php:7.1-fpm<br />
-&gt; COPY src/ /code/</em></p>
+<p>Then build the php image</p>
+
+<pre><code class="language-Dockerfile">FROM php:7.1-fpm  
+COPY src/ /code/_
+</code></pre>
 
 <p>Now make a simple <strong>kubernetes deployment</strong> with two containers — nginx and php, the communicate via the pod’s shared network using tcp port 9000(fastcgi_pass localhost:9000)</p>
 
-<p><em>DISCLAIMER: although we are using tcp socket here, you should probably use unix socket instead (using shared volume between containers)</em></p>
+<p><em>DISCLAIMER: although we are using tcp socket here, you might want to use unix socket instead (using shared volume between containers)</em></p>
 
 <p>Great, now <strong>we can scale horizontally and vertically</strong> with ease. Just set the number of replicas and create a horizontal pod autoscaler. Don’t forget to set the <strong>containers’ cpu/mem quotas</strong>.</p>
 
@@ -189,13 +202,17 @@ RUN apt-get update &amp;&amp; apt-get -y install nginx php-fpm</em></p>
 
 <p>Nginx doesn’t know php. There is no need to have the __ <strong>src/</strong> in nginx image. Let’s use the standard nginx image and put the <strong>source code in php image only.</strong></p>
 
-<p>We had one pod with both nginx and php, now we want both of them have their own pod. Make <strong>two kubernetes deployments</strong> and kubernetes service for php pods.
-&gt; <em>FROM nginx:1.13<br />
-&gt; COPY site.conf /etc/nginx/conf.d/default.conf</em></p>
+<p>We had one pod with both nginx and php, now we want both of them have their own pod. Make <strong>two kubernetes deployments</strong> and kubernetes service for php pods.</p>
 
-<p>since the php script are not longer in nginx, delete the _try<em>files</em> directive, next change the _fastcgi<em>pass</em> to the kubernetes service’s local dns (I named it <em>php</em>):
-&gt; _#try_files $uri =404;<br />
-&gt; fastcgi<em>pass php:9000;</em></p>
+<pre><code class="language-Dockerfile">FROM nginx:1.13  
+COPY site.conf /etc/nginx/conf.d/default.conf
+</code></pre>
+
+<p>since the php script are not longer in nginx, delete the _try<em>files</em> directive, next change the _fastcgi<em>pass</em> to the kubernetes service’s local dns (I named it <em>php</em>):</p>
+
+<pre><code class="language-nginx">#try_files $uri =404;  
+fastcgi_pass php:9000;
+</code></pre>
 
 <p>The kubernetes service called <em>php</em> loadbalances tcp traffic internally between pods labeled <em>php</em>. A local dns record <em>php</em> is created automatically for that internal loadbalancer. Nginx now sends the requests to the balanced pods group.</p>
 
@@ -209,12 +226,14 @@ RUN apt-get update &amp;&amp; apt-get -y install nginx php-fpm</em></p>
 
 <h3 id="solution-4">Solution 4:</h3>
 
-<p>Is there a better solution for GKE?</p>
+<p>Is there a better solution for Kubernetes?</p>
 
 <p>Is it a bad idea to get rid of the try_files in nginx.conf? Should I even use nginx at all? (let’s assume I’m serving the static assets from a different source)</p>
 
-<p>How does this work? Why am I getting nginx’s IP address with this —
-&gt; _&lt;?php echo $_SERVER[‘SERVER<em>ADDR’]; ?&gt;</em></p>
+<p>How does this work? Why am I getting nginx’s IP address with this:</p>
+
+<pre><code>&lt;?php echo $_SERVER[‘SERVER_ADDR’];
+</code></pre>
 
 <p>Feel free to discuss this with me, I’m having a hard time finding anything useful for running php on GKE. Would be nice to get hands on some best practices! Comment below, write me a DM or submit an issue. Thanks!</p>
 
@@ -236,7 +255,7 @@ RUN apt-get update &amp;&amp; apt-get -y install nginx php-fpm</em></p>
                         <a class="d-block col-md-6" href="http://blog.marekbartik.com/posts/2018-06-29_kubernetes-in-production-poddisruptionbudget/"> &laquo; Kubernetes in production — PodDisruptionBudget</a>
                     
                     
-                        <a class="d-block col-md-6 text-lg-right" href="http://blog.marekbartik.com/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/">Google Kubernetes Engine &#43; Google Cloud Builder &#43; GitHub for easy and quick CD pipeline &raquo;</a>
+                        <a class="d-block col-md-6 text-lg-right" href="http://blog.marekbartik.com/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/">Google Kubernetes Engine &#43; Cloud Builder &#43; GitHub for easy and quick CD pipeline &raquo;</a>
                     
                     <div class="clearfix"></div>
                     </div>

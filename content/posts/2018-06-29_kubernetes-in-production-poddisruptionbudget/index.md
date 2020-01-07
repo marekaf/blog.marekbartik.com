@@ -17,16 +17,10 @@ aliases:
     - "/kubernetes-in-production-poddisruptionbudget-1380009aaede"
 ---
 
-How to manage disruptions in Kubernetes? Setting a proper RollingUpdate strategy specs solves only one type of disruption.
+How to manage disruptions in Kubernetes? Setting a proper RollingUpdate strategy specs solves only one type of disruption. What about other disruptions like deleting deployments on accident, network partitions, kernel panics, hardware failures, pod evictions?
 
-What about other disruptions?
+PodDisruptionBudget for the win!
 
-
-
-
-![image](/posts/2018-06-29_kubernetes-in-production-poddisruptionbudget/images/1.png)
-
-my baby’s on fire [source: google images]
 
 ### Voluntary and Involuntary Disruptions
 
@@ -63,14 +57,15 @@ Here are some ways to mitigate involuntary disruptions:
 
 ### PodDisruptionBudget
 
-An Application Owner can create a `**PodDisruptionBudget**` object (PDB) for each application. A PDB limits the number pods of a replicated application that are down simultaneously from voluntary disruptions. For example, a quorum-based application would like to ensure that the number of replicas running is never brought below the number needed for a quorum. A web front end might want to ensure that the number of replicas serving load never falls below a certain percentage of the total.
+An Application Owner can create a `PodDisruptionBudget` object (PDB) for each application. A PDB limits the number pods of a replicated application that are down simultaneously from voluntary disruptions. For example, a quorum-based application would like to ensure that the number of replicas running is never brought below the number needed for a quorum. A web front end might want to ensure that the number of replicas serving load never falls below a certain percentage of the total.
 
-Cluster managers and hosting providers should use tools which respect Pod Disruption Budgets by calling the [Eviction API](https://kubernetes.io/docs/tasks/administer-cluster/safely-drain-node/#the-eviction-api) instead of directly deleting pods. Examples are the `**kubectl drain**` command and the Kubernetes-on-GCE cluster upgrade script (`**cluster/gce/upgrade.sh**`).
+Cluster managers and hosting providers should use tools which respect Pod Disruption Budgets by calling the [Eviction API](https://kubernetes.io/docs/tasks/administer-cluster/safely-drain-node/#the-eviction-api) instead of directly deleting pods. Examples are the `kubectl drain` command and the Kubernetes-on-GCE cluster upgrade script `cluster/gce/upgrade.sh` .
 
-When a cluster administrator wants to drain a node they use the `**kubectl drain**` command. That tool tries to evict all the pods on the machine. The eviction request may be temporarily rejected, and the tool periodically retries all failed requests until all pods are terminated, or until a configurable timeout is reached.
+When a cluster administrator wants to drain a node they use the `kubectl drain` command. That tool tries to evict all the pods on the machine. The eviction request may be temporarily rejected, and the tool periodically retries all failed requests until all pods are terminated, or until a configurable timeout is reached.
 
 Example PDB Using minAvailable:
-``**apiVersion: policy/v1beta1  
+```yaml
+apiVersion: policy/v1beta1  
 kind: PodDisruptionBudget  
 metadata:  
   name: zk-pdb  
@@ -78,10 +73,12 @@ spec:
   minAvailable: 2  
   selector:  
     matchLabels:  
-      app: zookeeper**``
+      app: zookeeper
+```
 
 Example PDB Using maxUnavailable (Kubernetes 1.7 or higher):
-``**apiVersion: policy/v1beta1  
+```yaml
+apiVersion: policy/v1beta1  
 kind: PodDisruptionBudget  
 metadata:  
   name: zk-pdb  
@@ -89,71 +86,85 @@ spec:
   maxUnavailable: 1  
   selector:  
     matchLabels:  
-      app: zookeeper**``### Helm
+      app: zookeeper
+```
+
+### Helm
 
 use this in your Chart!
 
-templates/pdb.yaml:
-`**{{- if .Values.budget.minAvailable -}}**  
+```golang
+// templates/pdb.yaml
+{{- if .Values.budget.minAvailable -}}
 apiVersion: policy/v1beta1  
 kind: PodDisruptionBudget  
 metadata:  
-  name: {{ template &#34;app.fullname&#34; . }}  
+  name: {{ template "app.fullname" . }}  
   namespace: {{ .Values.namespace }}  
   labels:  
-    app: {{ template &#34;app.name&#34; . }}  
-    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace &#34;+&#34; &#34;_&#34; }}  
+    app: {{ template "app.name" . }}  
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}  
     release: {{ .Release.Name }}  
     heritage: {{ .Release.Service }}  
 spec:  
   selector:  
     matchLabels:  
-      app: {{ template &#34;app.name&#34; . }}  
+      app: {{ template "app.name" . }}  
       env: {{ .Values.env.name }}  
   minAvailable: **{{ .Values.budget.minAvailable }}**  
-**{{- end -}}**`
+{{- end -}}
+```
 
 Imagine you have a service with 2 replicas and you need at least 1 to be available even during node upgrades and other ops tasks.
 
 install / upgrade your release:
-`helm upgrade --install --debug &#34;$RELEASE_NAME&#34; -f helm/values.yaml \ **--set replicas=2,budget.minAvailable=1** myrepo/mychart`
+```bash
+helm upgrade --install --debug "$RELEASE_NAME" -f helm/values.yaml \
+  --set replicas=2,budget.minAvailable=1** myrepo/mychart
+```
 
-kubectl describe pdb “$RELEASE_NAME”
-`Name: mysvc-prod  
+run `kubectl describe pdb "$RELEASE_NAME"`
+```
+Name: mysvc-prod  
 Namespace: prod  
 Min available: 1  
 Selector: app=myservice,env=prod  
 Status:  
- **Allowed disruptions: 1  
+ Allowed disruptions: 1  
  Current: 2  
  Desired: 1  
- Total: 2**  
-Events: &lt;none&gt;`
+ Total: 2  
+Events: <none>
+```
 
 drain a node with one of your pods running:
-`kubectl drain --delete-local-data --force --ignore-daemonsets gke-mycluster-prod-pool-2fca4c85-k6g5``node &#34;gke-mycluster-prod-pool-2fca4c85-k6g5&#34; already cordoned  
+```bash
+kubectl drain --delete-local-data --force --ignore-daemonsets gke-mycluster-prod-pool-2fca4c85-k6g5
+node "gke-mycluster-prod-pool-2fca4c85-k6g5" already cordoned  
 WARNING: Deleting pods with local storage: sqlproxy-67f695889d-t778w; Ignoring DaemonSet-managed pods: fluentd-gcp-v3.0.0-llp5s; Deleting pods not managed by ReplicationController, ReplicaSet, Job, DaemonSet or StatefulSet: kube-proxy-gke-testing-dev-pool-2fca4c85-k6g5  
-pod &#34;tiller-deploy-7b7b795779-rcvkd&#34; evicted  
-**pod &#34;mysvc-prod-6856d59f9b-lzrtf&#34; evicted**  
-node &#34;gke-mycluster-prod-pool-2fca4c85-k6g5&#34; drained`
+pod "tiller-deploy-7b7b795779-rcvkd" evicted  
+pod "mysvc-prod-6856d59f9b-lzrtf" evicted
+node "gke-mycluster-prod-pool-2fca4c85-k6g5" drained
+```
 
-again: kubectl describe pdb “$RELEASE_NAME”
-`Name: mysvc-prod  
+again run `kubectl describe pdb "$RELEASE_NAME"`
+```
+Name: mysvc-prod  
 Namespace: prod  
 Min available: 1  
 Selector: app=myservice,env=prod  
 Status:  
- **Allowed disruptions: 0  
+ Allowed disruptions: 0  
  Current: 1  
  Desired: 1  
- Total: 2**  
-Events: &lt;none&gt;`
-
+ Total: 2  
+Events: <none>`
+```
 Tadaaa! We drained a node without any disruptions of our service.
 
 ### PDB with 1 replica only?
 
-If we had 1 replica only, the [**kubectl drain would get stuck**](https://github.com/kubernetes/kubernetes/issues/48307) **always**. Node drains / upgrades would need to be solved manually.
+If we had 1 replica only, the [kubectl drain would get stuck](https://github.com/kubernetes/kubernetes/issues/48307) **always**. Node drains / upgrades would need to be solved manually.
 
 You might expect the eviction API would try to surge a replica to comply with the minAvailable condition, instead the drain gets stuck and it is your responsibility to solve this situation yourself. Is it a **bug or feature**? The Kubernetes community says you shouldn’t use 1 replica in production at all if you want HA, which is fair :)
 
@@ -161,15 +172,20 @@ It does what is expected, though.
 
 If you don’t want your kubectl drains to get stuck, you might want to use PDB for deployments with more than 1 replica.
 
-Edit your templates/pdb.yaml:
-`{{- if .Values.budget.minAvailable -}}  
+Edit your helm template
+```golang
+// templates/pdb.yaml
+{{- if .Values.budget.minAvailable -}}  
 **{{- if gt .Values.replicaCount 1 -}}**  
 apiVersion: policy/v1beta1  
 kind: PodDisruptionBudget  
 metadata:  
 ...  
-**{{- end -}}**  
-{{- end -}}`### How to perform Disruptive Actions on your Cluster
+{{- end -}}  
+{{- end -}}
+```
+
+### How to perform Disruptive Actions on your Cluster
 
 If you are a Cluster Administrator, and you need to perform a disruptive action on all the nodes in your cluster, such as a node or system software upgrade, here are some options:
 
@@ -184,6 +200,7 @@ If you are a Cluster Administrator, and you need to perform a disruptive action 
 *   No downtime.
 *   Minimal resource duplication.
 *   Allows more automation of cluster administration.
-*   Writing disruption-tolerant applications is tricky, but the work to tolerate voluntary disruptions largely overlaps with work to support autoscaling and tolerating involuntary disruptions.Sources:  
-docs [https://kubernetes.io/docs/concepts/workloads/pods/disruptions/](https://kubernetes.io/docs/concepts/workloads/pods/disruptions/)  
-magic
+*   Writing disruption-tolerant applications is tricky, but the work to tolerate voluntary disruptions largely overlaps with work to support autoscaling and tolerating involuntary disruptions.
+
+### Links
+docs [https://kubernetes.io/docs/concepts/workloads/pods/disruptions/](https://kubernetes.io/docs/concepts/workloads/pods/disruptions/)
