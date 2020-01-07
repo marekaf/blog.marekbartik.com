@@ -1,0 +1,58 @@
+baseURL = "http://blog.marekbartik.com/"
+languageCode = "en-us"
+title = "Marek Bartík | blog"
+theme = "mediumish-gohugo-theme"
+summaryLength = 25
+copyright = "Marek Bartík - All rights reserved"
+disqusShortname = "shortDisquis"
+googleAnalytics = "UA-42148466-5"
+
+[params]
+  #logo = "/images/icon.png"
+  description ="the clean blog!"
+  #mailchimp = "you can provide a mailchimp-link here, see below"
+  #mailprotect = "you can provide a protector-name here, see below"
+
+[params.author]
+  name = "Marek Bartík"
+  #thumbnail = "/images/author.jpg"
+  description = "Creator of this blog."
+
+  [params.index]
+  #picture = "/images/author.jpg"
+  title = "Marek Bartík"
+  subtitle = "I'm a unique placeholder. Working here and there!"
+  mdtext = '''Currently trying to get this blog running, still don't know what the blog will be about!\
+**This textblock is a demonstration of the mdtext-param.**\
+### This is a markdown heading'''
+  alertbar = true
+
+[params.social]
+  github = "marekaf"
+  linkedin = "marekbartik"
+  #xing = "<username>"
+  #medium = "<username>"
+  twitter = "MarekBartik"
+  #instagram = "<username>"
+
+## Main Menu
+[[menu.main]]
+    name = "Blog"
+    weight = 100
+    identifier = "blog"
+    url = "/blog"
+[[menu.main]]
+    name = "Separate"
+    weight = 100
+    identifier = "separate"
+    url = "/separate"
+[[menu.main]]
+    name = "About Me"
+    identifier = "about"
+    weight = 200
+    url = "/"
+[[menu.main]]
+    name = "Imprint"
+    identifier = "imprint"
+    weight = 200
+    url = "/static/imprint"
