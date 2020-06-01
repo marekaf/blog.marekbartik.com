@@ -2,7 +2,7 @@
 <html lang="en-us"><head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-	<meta name="generator" content="Hugo 0.59.0" />
+	<meta name="generator" content="Hugo 0.62.2" />
 	
 	<title>HorizontalPodAutoscaler with external metrics from PubSub | marekbartik.com | tech blog</title>
 	
@@ -18,11 +18,8 @@
 <meta property="og:description" content="There are certain use cases where scaling horizontally based on cpu usage does not really work well. Let’s say you have a consumer worker pool running on Google Kubernetes Engine." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="http://blog.marekbartik.com/posts/2019-04-05_google-kubernetes-enginehorizontalpodautoscaler-with-external-metrics-from-pubsub/" />
-
 <meta property="og:image" content="http://blog.marekbartik.com/posts/2019-04-05_google-kubernetes-enginehorizontalpodautoscaler-with-external-metrics-from-pubsub/images/1.png" />
-
 <meta property="og:image" content="http://blog.marekbartik.com/posts/2019-04-05_google-kubernetes-enginehorizontalpodautoscaler-with-external-metrics-from-pubsub/images/2.png" />
-
 <meta property="og:image" content="http://blog.marekbartik.com/posts/2019-04-05_google-kubernetes-enginehorizontalpodautoscaler-with-external-metrics-from-pubsub/images/3.png" />
 <meta property="article:published_time" content="2019-04-05T12:31:58+00:00" />
 <meta property="article:modified_time" content="2020-01-07T09:02:45+01:00" />
@@ -145,36 +142,21 @@
 
                     
                     <div class="article-post">
-                        
-
-<p>There are certain use cases where scaling horizontally based on cpu usage does not really work well. Let’s say you have a consumer worker pool running on Google Kubernetes Engine. The consumers are pulling messages from a PubSub topic. When the queue is filling up we want more workers to process the messages quickly. On the other hand, when the queue is empty, we don’t want to pay for a big worker pool that sits idle.</p>
-
+                        <p>There are certain use cases where scaling horizontally based on cpu usage does not really work well. Let’s say you have a consumer worker pool running on Google Kubernetes Engine. The consumers are pulling messages from a PubSub topic. When the queue is filling up we want more workers to process the messages quickly. On the other hand, when the queue is empty, we don’t want to pay for a big worker pool that sits idle.</p>
 <p>With Cloud PubSub Stackdriver metrics adapter running on GKE we can easily autoscale our worker pool for minimum latency and maximum cost-effectivity.</p>
-
 <h3 id="autoscaling-deployments-with-external-metrics">Autoscaling Deployments with External Metrics</h3>
-
 <p>This tutorial demonstrates how to automatically scale your GKE workloads based on metrics available in <a href="https://cloud.google.com/stackdriver/">Stackdriver</a>.</p>
-
 <p>If you want to autoscale based on metric exported by your Kubernetes workload or a metric attached to Kubernetes object such as Pod or Node visit <a href="https://cloud.google.com/kubernetes-engine/docs/tutorials/custom-metrics-autoscaling">Autoscaling Deployments with Custom Metrics</a> instead.</p>
-
 <p>This example shows autoscaling based on number of undelivered messages in a <a href="https://cloud.google.com/pubsub/">Cloud Pub/Sub</a> subscription, but the instructions can be applied to any metric available in Stackdriver.</p>
-
 <p>Stackdriver Cloud Pub/Sub Monitoring:
-<img src="/posts/2019-04-05_google-kubernetes-enginehorizontalpodautoscaler-with-external-metrics-from-pubsub/images/1.png" alt="Stackdriver Cloud Pub/Sub Monitoring" title="Stackdriver Cloud Pub/Sub Monitoring" /></p>
-
+<img src="/posts/2019-04-05_google-kubernetes-enginehorizontalpodautoscaler-with-external-metrics-from-pubsub/images/1.png" alt="Stackdriver Cloud Pub/Sub Monitoring" title="Stackdriver Cloud Pub/Sub Monitoring"></p>
 <h3 id="provision-gcp-resources">Provision GCP resources</h3>
-
 <p>We’ll be using terraform here to provision all necessary GCP resources. The cluster and nodepool’s definition is in file <a href="https://raw.githubusercontent.com/marekaf/gke-hpa-stackdriver-pubsub/master/main.tf">main.tf</a>. Make sure to follow all the steps in README to create a service account for terraform with all necessary permissions to create all the resources.</p>
-
 <p>Then run:</p>
-
 <pre><code>terraform init  
 terraform plan -out planfile  
 terraform apply planfile
-</code></pre>
-
-<p>The PubSub topic will be named “echo”, the subscription to it “echo-read”. If you’ve run terraform apply successfully, this is provisioned already.</p>
-
+</code></pre><p>The PubSub topic will be named “echo”, the subscription to it “echo-read”. If you’ve run terraform apply successfully, this is provisioned already.</p>
 <pre><code>resource &quot;google_pubsub_topic&quot; &quot;echo&quot; {  
   name = &quot;echo&quot;  
 }  
@@ -185,94 +167,60 @@ resource &quot;google_pubsub_subscription&quot; &quot;echo&quot; {
 
   ack_deadline_seconds = 20  
 }
-</code></pre>
-
-<h3 id="deploy-stackdriver-metrics-adapter">Deploy Stackdriver metrics adapter</h3>
-
+</code></pre><h3 id="deploy-stackdriver-metrics-adapter">Deploy Stackdriver metrics adapter</h3>
 <p>Make sure you have kubectl installed and you can <a href="https://cloud.google.com/kubernetes-engine/docs/how-to/cluster-access-for-kubectl">access the cluster</a>.</p>
-
 <p>Deploy the stackdriver adapter:</p>
-
 <pre><code>kubectl create -f \
   https://raw.githubusercontent.com/GoogleCloudPlatform/k8s-stackdriver/master/custom-metrics-stackdriver-adapter/deploy/production/adapter.yaml
-</code></pre>
-
-<h3 id="deploy-the-hpa-and-deployment">Deploy the HPA and deployment</h3>
-
+</code></pre><h3 id="deploy-the-hpa-and-deployment">Deploy the HPA and deployment</h3>
 <p>Here’s how the HPA’s definition look like:</p>
-
-<pre><code class="language-yaml">apiVersion: autoscaling/v2beta1  
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-yaml" data-lang="yaml">apiVersion: autoscaling/v2beta1  
 kind: HorizontalPodAutoscaler  
 metadata:  
   name: pubsub  
 spec:  
-  minReplicas: 1  
-  maxReplicas: 5  
+  minReplicas: <span style="color:#ae81ff">1</span>  
+  maxReplicas: <span style="color:#ae81ff">5</span>  
   metrics:  
   - external:  
       metricName: pubsub.googleapis.com|subscription|num_undelivered_messages  
       metricSelector:  
         matchLabels:  
           resource.labels.subscription_id: echo-read  
-      targetAverageValue: &quot;2&quot;  
+      targetAverageValue: <span style="color:#e6db74">&#34;2&#34;</span>  
     type: External  
   scaleTargetRef:  
     apiVersion: apps/v1  
     kind: Deployment  
     name: pubsub
-</code></pre>
-
-<p>We’ll autoscale between 1–5 replicas, based on external metric <code>pubsub.googleapis.com|subscription|num_undelivered_messages</code> from our <code>echo-read</code> subscription.</p>
-
+</code></pre></div><p>We’ll autoscale between 1–5 replicas, based on external metric <code>pubsub.googleapis.com|subscription|num_undelivered_messages</code> from our <code>echo-read</code> subscription.</p>
 <p>Target value is 2 undelivered messages. What does it actually mean though?</p>
-
-<p>Example: let’s say my deployment is currently running <strong>3</strong> replicas and my queue grows from 6 to 8 undelivered messages.<br />
-I have <sup>8</sup>&frasl;<sub>3</sub>=2.6 undelivered messages per replica.<br />
+<p>Example: let’s say my deployment is currently running <strong>3</strong> replicas and my queue grows from 6 to 8 undelivered messages.<br>
+I have 8/3=2.6 undelivered messages per replica.<br>
 That hits the threshold and triggers a scale-out to <strong>4</strong> replicas, which will have 8/<strong>4</strong>=2 undelivered messages per replica and that fits the desired targetAverageValue.</p>
-
 <p>If I had 50 undelivered messages, I will have 5 replicas as it’s my maximum.</p>
-
 <p>If I had 0 undelivered messages, I will have 1 replica as it’s my minimum.</p>
-
 <p>The <em>scaleTargetRef</em> is a reference of the resource that I’m autoscaling. It’s a deployment that is defined in file <a href="https://raw.githubusercontent.com/marekaf/gke-hpa-stackdriver-pubsub/master/pubsub-deployment.yaml">pubsub-deployment.yaml</a>.</p>
-
 <p>Deploy the HPA with the deployment that is going to be autoscaled:</p>
-
 <pre><code>kubectl apply -f  pubsub-hpa.yaml  
 kubectl apply -f  pubsub-deployment.yaml
-</code></pre>
-
-<h3 id="test-it">Test it!</h3>
-
+</code></pre><h3 id="test-it">Test it!</h3>
 <p>Publish some messages to the topic</p>
-
-<pre><code class="language-bash">for i in {1..200}; do   
-  gcloud pubsub topics publish echo --message=”Autoscaling #${i}”  
-done
-</code></pre>
-
-<p>And watch the cluster’s resources doing its magic</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#66d9ef">for</span> i in <span style="color:#f92672">{</span>1..200<span style="color:#f92672">}</span>; <span style="color:#66d9ef">do</span>   
+  gcloud pubsub topics publish echo --message<span style="color:#f92672">=</span>”Autoscaling <span style="color:#75715e">#${i}”</span>  
+<span style="color:#66d9ef">done</span>
+</code></pre></div><p>And watch the cluster’s resources doing its magic</p>
 <pre><code>watch 'kubectl get pods; echo ; kubectl get hpa'
-</code></pre>
-
-<p>scale-out on saturated queue:
-<img src="/posts/2019-04-05_google-kubernetes-enginehorizontalpodautoscaler-with-external-metrics-from-pubsub/images/2.png" alt="scale-out on saturated queue" title="scale-out on saturated queue" /></p>
-
+</code></pre><p>scale-out on saturated queue:
+<img src="/posts/2019-04-05_google-kubernetes-enginehorizontalpodautoscaler-with-external-metrics-from-pubsub/images/2.png" alt="scale-out on saturated queue" title="scale-out on saturated queue"></p>
 <p>scale-in on empty qeue:
-<img src="/posts/2019-04-05_google-kubernetes-enginehorizontalpodautoscaler-with-external-metrics-from-pubsub/images/3.png" alt="scale-in on empty qeue" title="scale-in on empty qeue" /></p>
-
+<img src="/posts/2019-04-05_google-kubernetes-enginehorizontalpodautoscaler-with-external-metrics-from-pubsub/images/3.png" alt="scale-in on empty qeue" title="scale-in on empty qeue"></p>
 <h3 id="summary">Summary</h3>
-
-<p>With this simple setup you have a pretty decent setup for horizontal autoscaling. The ugly thing is running the stackdriver adapter yourself, at least the HPA controller is part of GKE and is fully managed for you.<br />
+<p>With this simple setup you have a pretty decent setup for horizontal autoscaling. The ugly thing is running the stackdriver adapter yourself, at least the HPA controller is part of GKE and is fully managed for you.<br>
 The other cool thing about HPA is that <a href="https://cloud.google.com/blog/products/gcp/beyond-cpu-horizontal-pod-autoscaling-comes-to-google-kubernetes-engine">you can use multiple metrics</a> (even a combination of custom/external/cpu) in the same HPA resource and your deployment is going to be scaled based on either of them hitting a threshold.</p>
-
 <h3 id="links">Links</h3>
-
 <p><a href="https://github.com/marekaf/gke-hpa-stackdriver-pubsub">https://github.com/marekaf/gke-hpa-stackdriver-pubsub</a></p>
-
 <p><a href="https://cloud.google.com/kubernetes-engine/docs/tutorials/authenticating-to-cloud-platform">https://cloud.google.com/kubernetes-engine/docs/tutorials/authenticating-to-cloud-platform</a></p>
-
 <p><a href="https://cloud.google.com/kubernetes-engine/docs/tutorials/external-metrics-autoscaling">https://cloud.google.com/kubernetes-engine/docs/tutorials/external-metrics-autoscaling</a></p>
 
                     </div>

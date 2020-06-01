@@ -2,7 +2,7 @@
 <html lang="en-us"><head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-	<meta name="generator" content="Hugo 0.59.0" />
+	<meta name="generator" content="Hugo 0.62.2" />
 	
 	<title>Google Container Registry lifecycle policy for images retention | marekbartik.com | tech blog</title>
 	
@@ -20,7 +20,6 @@ Amazon’s Elastic Container Registry has a feature called Lifecycle Policies to
 Amazon’s Elastic Container Registry has a feature called Lifecycle Policies to handle images retention." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="http://blog.marekbartik.com/posts/2019-09-26_google-container-registry-lifecycle-policy-for-images-retention/" />
-
 <meta property="og:image" content="http://blog.marekbartik.com/posts/2019-09-26_google-container-registry-lifecycle-policy-for-images-retention/images/1.png" />
 <meta property="article:published_time" content="2019-09-26T09:32:41+00:00" />
 <meta property="article:modified_time" content="2020-01-07T09:02:49+01:00" />
@@ -143,94 +142,57 @@ Amazon’s Elastic Container Registry has a feature called Lifecycle Policies to
 
                     
                     <div class="article-post">
-                        
-
-<p>Is your Google Container Registry filling up, taking up storage and becoming expensive? How to handle images retention as a service?</p>
-
+                        <p>Is your Google Container Registry filling up, taking up storage and becoming expensive? How to handle images retention as a service?</p>
 <p>Amazon’s Elastic Container Registry has a feature called <a href="https://docs.aws.amazon.com/AmazonECR/latest/userguide/LifecyclePolicies.html">Lifecycle Policies</a> to handle images retention. Google doesn’t have this feature. There is a <a href="https://issuetracker.google.com/issues/113559510">feature request in their tracker</a> since Aug 2018 and there is not ETA for it so far…</p>
-
 <h2 id="available-solutions">Available solutions</h2>
-
 <p>There is a popular <a href="https://gist.github.com/ahmetb/7ce6d741bd5baa194a3fac6b1fec8bb7">bash script from Ahmet</a> and <a href="https://github.com/sethvargo/gcr-cleaner">Go in CloudRun from Seth</a> but none of them solve the requirements I needed. What exactly do I need?</p>
-
 <h2 id="problem-description">Problem description</h2>
-
 <p>I want to scan my whole GCR and delete the digests that are:</p>
-
 <ul>
 <li>older than X days</li>
 <li>not being used in my kubernetes cluster</li>
 <li>not the most recent Y digests (I wanna keep, say, 20 most recent tagged digests)</li>
 </ul>
-
 <p>When I check these requirements, I want to apply these lifecycle policies to all the images.</p>
-
 <p>Say I have few images in GCR with certain prefixes:
 <code>eu.gcr.io/my-project/foo/bar/my-service:123</code></p>
-
-<p><em>eu.gcr.io</em> is the docker registry endpoint<br />
-<em>my-project</em> is ID of my GCP project<br />
-<em>foo/bar</em> is the prefix (“repo”)<br />
-<em>my-service</em> is an image name<br />
+<p><em>eu.gcr.io</em> is the docker registry endpoint<br>
+<em>my-project</em> is ID of my GCP project<br>
+<em>foo/bar</em> is the prefix (“repo”)<br>
+<em>my-service</em> is an image name<br>
 <em>123</em> is a tag</p>
-
 <p><em>my-service:123</em> is an image with a tag, but wait, <a href="https://windsock.io/explaining-docker-image-ids/">what is the digest</a>?</p>
-
 <p>Image vs Layers, taken from <a href="https://windsock.io/explaining-docker-image-ids/">https://windsock.io/explaining-docker-image-ids/</a>:
-<img src="/posts/2019-09-26_google-container-registry-lifecycle-policy-for-images-retention/images/1.png" alt="Image vs Layers" title="Image vs Layers" /></p>
-
+<img src="/posts/2019-09-26_google-container-registry-lifecycle-policy-for-images-retention/images/1.png" alt="Image vs Layers" title="Image vs Layers"></p>
 <p>A docker image digest is an ID (hashing algorithm used and the hash computed). The digest can look like this:</p>
-
 <p><em>@sha256:296e2378f7a14695b2f53101a3bd443f656f823c46d13bf6406b91e9e9950ef0</em></p>
-
 <p>You can tag a digest with several tags, even zero tags = untagged image.</p>
-
 <p>Let’s say build an image <em>my-service</em> and push it to docker registry. When pushing, I tag it with <em>:123.</em> The new produced digest has two tags,<em>:123</em> and <em>:latest</em>.The digest that was tagged <em>:latest</em> before I pushed this image, got the <em>:latest</em> tag removed.</p>
-
 <p>If I remove a tag from an image in GCR, I simply remove a tag from the digest, I don’t delete the digest though.</p>
-
 <p>What I can delete, in order to save some space, is the digest, like this:</p>
-
 <pre><code>gcloud container images delete -q — force-delete-tags \
   eu.gcr.io/my-project/foo/bar/my-service@sha256:296e2378f7a14695b2f53101a3bd443f656f823c46d13bf6406b91e9e9950ef0
-</code></pre>
-
-<h2 id="implementation">Implementation</h2>
-
+</code></pre><h2 id="implementation">Implementation</h2>
 <p>Then, what do I need to do?</p>
-
 <ul>
 <li>Recursively scan <em>gcr.io</em> for all image prefixes (eu.gcr.io/my-project/foo/bar/my-service)</li>
 <li>For each prefix — list all its digests, delete the ones that don’t match my rules</li>
 </ul>
-
 <p>How to check if they match the rules:</p>
-
 <ul>
 <li>sort them, preserve the most recent Y digests</li>
 <li>fetch pods and replicaSets’ image:tags (all of them, even the ones scaled to zero, we’d need these images in case of a rollback) from the k8s cluster, then go through the digests (that belong to that image name) and check if ANY of their tags contain a tag that is used in the cluster, preserve those</li>
 <li>check the rest of the digests, if they are older than X days, delete them</li>
 </ul>
-
 <p>you could use standard kubectl to fetch the data:</p>
-
 <pre><code>kubectl get rs,po --all-namespaces -o jsonpath={..image} | tr ' ' '\n'
-</code></pre>
-
-<p>the gcr.io is exposing a docker v2 API, you can use a standard docker client or just curl using the gcloud token</p>
-
+</code></pre><p>the gcr.io is exposing a docker v2 API, you can use a standard docker client or just curl using the gcloud token</p>
 <pre><code>ACCESS_TOKEN=$(gcloud auth print-access-token)
 curl --silent --show-error -u_token:&quot;$ACCESS_TOKEN&quot; -X GET &quot;https://eu.gcr.io/v2/_catalog&quot;
-</code></pre>
-
-<p>I implemented all of this using <em>bash/jq</em> (yep, that wasn’t a smart idea) and published it to github:</p>
-
+</code></pre><p>I implemented all of this using <em>bash/jq</em> (yep, that wasn’t a smart idea) and published it to github:</p>
 <p><a href="https://github.com/marekaf/gcr-lifecycle-policy">marekaf/gcr-lifecycle-policy</a></p>
-
 <p>Right now I’m running this in Gitlab-CI pipeline on a cron schedule (once a day) to evaluate it’s dry-run logs for production GCP projects.</p>
-
 <h2 id="summary">Summary</h2>
-
 <p>I’m planning on rewriting this to python (py-kubeng and docker-py) if Google will not to come up with ETA for this feature.</p>
 
                     </div>
@@ -245,6 +207,8 @@ curl --silent --show-error -u_token:&quot;$ACCESS_TOKEN&quot; -X GET &quot;https
                     
                     
                     <div class="row PageNavigation d-flex justify-content-between font-weight-bold">
+                    
+                        <a class="d-block col-md-6" href="http://blog.marekbartik.com/posts/2020-05-15_reasons-senior-engineers-are-leaving/"> &laquo; Reasons why are senior engineers leaving</a>
                     
                     
                         <a class="d-block col-md-6 text-lg-right" href="http://blog.marekbartik.com/posts/2019-04-05_google-kubernetes-enginehorizontalpodautoscaler-with-external-metrics-from-pubsub/">HorizontalPodAutoscaler with external metrics from PubSub &raquo;</a>

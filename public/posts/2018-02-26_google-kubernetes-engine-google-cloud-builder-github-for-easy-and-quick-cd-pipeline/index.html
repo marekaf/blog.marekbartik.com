@@ -2,7 +2,7 @@
 <html lang="en-us"><head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-	<meta name="generator" content="Hugo 0.59.0" />
+	<meta name="generator" content="Hugo 0.62.2" />
 	
 	<title>Google Kubernetes Engine &#43; Cloud Builder &#43; GitHub for easy and quick CD pipeline | marekbartik.com | tech blog</title>
 	
@@ -18,17 +18,11 @@
 <meta property="og:description" content="I love Google Cloud Platform. I love Google Kubernetes Engine. And I love GitHub as well. But I need a quick CD pipeline for an easy automated app deployment. Setting up the whole Jenkins CI or using…" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="http://blog.marekbartik.com/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/" />
-
 <meta property="og:image" content="http://blog.marekbartik.com/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/1.png" />
-
 <meta property="og:image" content="http://blog.marekbartik.com/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/2.png" />
-
 <meta property="og:image" content="http://blog.marekbartik.com/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/3.png" />
-
 <meta property="og:image" content="http://blog.marekbartik.com/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/4.png" />
-
 <meta property="og:image" content="http://blog.marekbartik.com/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/5.png" />
-
 <meta property="og:image" content="http://blog.marekbartik.com/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/6.png" />
 <meta property="article:published_time" content="2018-02-26T09:58:14+00:00" />
 <meta property="article:modified_time" content="2020-01-07T09:02:22+01:00" />
@@ -151,48 +145,29 @@
 
                     
                     <div class="article-post">
-                        
-
-<p>I love Google Cloud Platform. I love Google Kubernetes Engine. And I love GitHub as well. But I need a quick CD pipeline for an easy automated app deployment. Setting up the whole Jenkins CI or using some paid Pipeline as a service takes too much time, energy and money. Here comes the Google Cloud Builder (currently beta).</p>
-
-<h2 id="let-s-start">Let&rsquo;s start</h2>
-
+                        <p>I love Google Cloud Platform. I love Google Kubernetes Engine. And I love GitHub as well. But I need a quick CD pipeline for an easy automated app deployment. Setting up the whole Jenkins CI or using some paid Pipeline as a service takes too much time, energy and money. Here comes the Google Cloud Builder (currently beta).</p>
+<h2 id="lets-start">Let's start</h2>
 <p>I have an easy stateless php app running on nginx and php-fpm in Docker containers versioned in git on GitHub. And I need is to deploy it quickly and cheap to GKE.</p>
-
 <p>Open up <code>Build triggers</code>. It should be in <code>Google console — Tools — Container Registry — Build triggers</code> (but, you know, they change the UI like every week, so it might be somewhere else)
-<img src="/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/1.png" alt="image" /></p>
-
+<img src="/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/1.png" alt="image"></p>
 <p>Link your GitHub account with GCP
-<img src="/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/2.png" alt="image" /></p>
-
+<img src="/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/2.png" alt="image"></p>
 <p>Import your repo
-<img src="/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/3.png" alt="image" /></p>
-
+<img src="/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/3.png" alt="image"></p>
 <p>Set the trigger
-<img src="/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/4.png" alt="image" /></p>
-
+<img src="/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/4.png" alt="image"></p>
 <p>Choose the cloudbuild.yaml where you can define your <a href="https://cloud.google.com/container-builder/docs/create-custom-build-steps">CI/CD pipeline as a code.</a></p>
-
-<h2 id="let-s-test-it">Let&rsquo;s test it</h2>
-
+<h2 id="lets-test-it">Let's test it</h2>
 <p>It is ugly, I know. I needed a fast solution, not a pretty one.</p>
-
 <p>I need to build two Docker images, from different Dockerfiles, push them to Google Container Registry, template kubernetes deployment manifests, deploy them on GKE (kubectl apply) and create an ingress resource for external http traffic.</p>
-
 <p>After I push to the repo, the build is automatically started
-<img src="/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/5.png" alt="image" /></p>
-
+<img src="/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/5.png" alt="image"></p>
 <p>I see the git commit and action which caused the trigger, pipeline steps, time they took, total time of the build, link to images in GCR. And log:
-<img src="/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/6.png" alt="image" /></p>
-
+<img src="/posts/2018-02-26_google-kubernetes-engine-google-cloud-builder-github-for-easy-and-quick-cd-pipeline/images/6.png" alt="image"></p>
 <h2 id="summary">Summary</h2>
-
 <p>All is immutable, I can easily rollback deployment to a tagged image with a commit id from git. I can Rebuild the build in Build history. <a href="https://medium.com/@marekbartik/google-kubernetes-engine-with-external-dns-on-cloudflare-provider-24beb2a6b8fc">Ingress DNS records are pushed to CloudFlare automatically.</a></p>
-
 <p>I had to create my own deployment/service/ingress/whatever kubernetes manifests and had to template them with sed (which is super ugly and the syntax won’t always work). Google Cloud Builder is in beta and there is definitely a lot to improve. Templating and GKE integration would be nice (manual kubectl apply, srsly?) to have. As well as deployment strategy selection and easier provisioning maybe?</p>
-
 <p>Check the source repo: <a href="https://github.com/bartimar/gke-test">https://github.com/bartimar/gke-test</a></p>
-
 <p>EDIT: Check this amazing github repo of the one and only Kelsey Hightower with great tutorials on Google Cloud Builder <a href="https://github.com/kelseyhightower/pipeline">https://github.com/kelseyhightower/pipeline</a></p>
 
                     </div>

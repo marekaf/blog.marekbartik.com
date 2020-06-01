@@ -7,10 +7,20 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>Marek Bartík - All rights reserved</copyright>
-    <lastBuildDate>Thu, 26 Sep 2019 09:32:41 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 15 May 2020 08:32:41 +0000</lastBuildDate>
     
 	<atom:link href="http://blog.marekbartik.com/posts/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Reasons why are senior engineers leaving</title>
+      <link>http://blog.marekbartik.com/posts/2020-05-15_reasons-senior-engineers-are-leaving/</link>
+      <pubDate>Fri, 15 May 2020 08:32:41 +0000</pubDate>
+      
+      <guid>http://blog.marekbartik.com/posts/2020-05-15_reasons-senior-engineers-are-leaving/</guid>
+      <description>Did you ever wonder: “Why are senior engineers leaving our company?”, then this blogpost might be just for you.
+I&#39;m going to talk about my own experience - my small social bubble, the people and companies around me, myself included, primarily talking about software engineers &amp;ndash; even though I do hear the same from other fields too.</description>
+    </item>
     
     <item>
       <title>Google Container Registry lifecycle policy for images retention</title>
@@ -55,7 +65,7 @@ Amazon’s Elastic Container Registry has a feature called Lifecycle Policies to
       <pubDate>Sat, 24 Mar 2018 15:43:47 +0000</pubDate>
       
       <guid>http://blog.marekbartik.com/posts/2018-03-24_autoscale-nginx-and-phpfpm-independently-on-google-kubernetes-engine/</guid>
-      <description>Let’s say I have a stateless php app that needs to run 24&amp;frasl;7 and automatically scale up to perform well and scale down to be cost-effective.</description>
+      <description>Let’s say I have a stateless php app that needs to run 24/7 and automatically scale up to perform well and scale down to be cost-effective.</description>
     </item>
     
     <item>

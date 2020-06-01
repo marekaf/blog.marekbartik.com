@@ -2,7 +2,7 @@
 <html lang="en-us"><head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-	<meta name="generator" content="Hugo 0.59.0" />
+	<meta name="generator" content="Hugo 0.62.2" />
 	
 	<title>Stackdriver Logging - json log transformations using Cloud Functions | marekbartik.com | tech blog</title>
 	
@@ -18,9 +18,7 @@
 <meta property="og:description" content="Stackdriver Logging can get expensive. Sometimes you don’t need to query/store all your application logs in Stackdriver, especially dev logs. Or you simply don’t like Stackdriver (wink wink)." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="http://blog.marekbartik.com/posts/2019-01-26_gcp-stackdriver-logging-export-to-bucket-and-extract-textpayload-from-json-with-cloud-functions/" />
-
 <meta property="og:image" content="http://blog.marekbartik.com/posts/2019-01-26_gcp-stackdriver-logging-export-to-bucket-and-extract-textpayload-from-json-with-cloud-functions/images/1.png" />
-
 <meta property="og:image" content="http://blog.marekbartik.com/posts/2019-01-26_gcp-stackdriver-logging-export-to-bucket-and-extract-textpayload-from-json-with-cloud-functions/images/2.png" />
 <meta property="article:published_time" content="2019-01-26T16:20:44+00:00" />
 <meta property="article:modified_time" content="2020-01-07T09:02:42+01:00" />
@@ -143,203 +141,154 @@
 
                     
                     <div class="article-post">
-                        
-
-<p>Stackdriver Logging can get expensive. Sometimes you don’t need to query/store all your application logs in Stackdriver, especially dev logs. Or you simply don’t like Stackdriver (wink wink).</p>
-
+                        <p>Stackdriver Logging can get expensive. Sometimes you don’t need to query/store all your application logs in Stackdriver, especially dev logs. Or you simply don’t like Stackdriver (wink wink).</p>
 <p>On GCP you can export your logs to Google Storage Bucket automatically. Every hour there is a json file containing your logs and its metadata. What if you need just the raw logs though?With Stackdriver Logging you pay for log ingestion. There’s also <a href="https://cloud.google.com/logging/quotas#logs_retention_periods">log retention of 30 days only</a>!</p>
-
 <p>What if I want to store my logs for longer time? What if I don’t want to pay so much for my dev logs? What if I’m using a different tools for log analysis?</p>
-
 <h2 id="stackdriver-logging-architecture">Stackdriver Logging architecture</h2>
-
 <p>Stackdriver Logging has two additional services beside logging: Export and Exlusions. See the diagram below.</p>
-
 <p>Google Cloud Platform Logging Architecture:
-<img src="/posts/2019-01-26_gcp-stackdriver-logging-export-to-bucket-and-extract-textpayload-from-json-with-cloud-functions/images/1.png" alt="Google Cloud Platform Logging Architecture" /></p>
-
+<img src="/posts/2019-01-26_gcp-stackdriver-logging-export-to-bucket-and-extract-textpayload-from-json-with-cloud-functions/images/1.png" alt="Google Cloud Platform Logging Architecture"></p>
 <p>Google Cloud Platform Logging Architecture, source: <a href="https://cloud.google.com/logging/docs/export/">https://cloud.google.com/logging/docs/export/</a></p>
-
 <h3 id="exclusions">Exclusions</h3>
-
 <p>You can exclude logs based on their resource type or write more complex exclusion queries like:</p>
-
 <pre><code>resource.type=&quot;container&quot;   
   AND labels.&quot;container.googleapis.com/namespace_name&quot;=&quot;devel&quot;   
   AND severity &gt; INFO
-</code></pre>
-
-<p>this excludes all GKE container logs from k8s namespace called &ldquo;devel&rdquo; that have severity greater than INFO (basically here just everything from stderr)</p>
-
+</code></pre><p>this excludes all GKE container logs from k8s namespace called &ldquo;devel&rdquo; that have severity greater than INFO (basically here just everything from stderr)</p>
 <p>And you can set 99% of those logs to be discarded! (or any other number from 0–100%).</p>
-
 <h3 id="exports">Exports</h3>
-
 <p>The great thing about this architecture is, that Exports are independent of Exclusions. If I want to Export some logs to BigQuery or Bucket I can let them to be ingested by Stackdriver at the same time or Exclude them to save some money. So creating an Exclusion does not affect my Exports and that’s pretty dope.</p>
-
 <p>Exports are either batched or streamed. Export to bucket is batched (every hour one file named with the timestamp is created) and this can’t be changed afaik. Exports to BigQuery and Pub/Sub are streamed. You will pay for the streamed volume to BigQuery or Pub/Sub pricing accordingly. In either case you will pay for the storage as well.</p>
-
 <h3 id="export-logs-to-google-storage-bucket">Export logs to Google Storage Bucket</h3>
-
 <p>When you create an automatic export of your logs to a bucket, you can expect two things:</p>
-
 <p>Delay: around 10:10am you’ll get logs collected in time window of 9:00–10:00am and there’s nothing to guarantee that delivery time, sometimes it gets delayed even more. Not suitable for (near-)realtime log processing.</p>
-
 <p>Log format: each line looks like this</p>
-
-<pre><code class="language-json">{
-  &quot;insertId&quot;: &quot;9pxrl4ffvybrn&quot;,
-  &quot;labels&quot;: {
-    &quot;compute.googleapis.com/resource_name&quot;: &quot;fluentd-gcp-v3.1.0–2bmxq&quot;,
-    &quot;container.googleapis.com/namespace_name&quot;: &quot;prod&quot;,
-    &quot;container.googleapis.com/pod_name&quot;: &quot;my-app-6b495f4d8b-9l2gb&quot;,
-    &quot;container.googleapis.com/stream&quot;: &quot;stdout&quot;
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
+  <span style="color:#f92672">&#34;insertId&#34;</span>: <span style="color:#e6db74">&#34;9pxrl4ffvybrn&#34;</span>,
+  <span style="color:#f92672">&#34;labels&#34;</span>: {
+    <span style="color:#f92672">&#34;compute.googleapis.com/resource_name&#34;</span>: <span style="color:#e6db74">&#34;fluentd-gcp-v3.1.0–2bmxq&#34;</span>,
+    <span style="color:#f92672">&#34;container.googleapis.com/namespace_name&#34;</span>: <span style="color:#e6db74">&#34;prod&#34;</span>,
+    <span style="color:#f92672">&#34;container.googleapis.com/pod_name&#34;</span>: <span style="color:#e6db74">&#34;my-app-6b495f4d8b-9l2gb&#34;</span>,
+    <span style="color:#f92672">&#34;container.googleapis.com/stream&#34;</span>: <span style="color:#e6db74">&#34;stdout&#34;</span>
   },
-  &quot;logName&quot;: &quot;projects/my-project/logs/my-app&quot;,
-  &quot;receiveTimestamp&quot;: &quot;2019–01–26T00:00:02.198052458Z&quot;,
-  &quot;resource&quot;: {
-    &quot;labels&quot;: {
-      &quot;cluster_name&quot;: &quot;prod-cluster&quot;,
-      &quot;container_name&quot;: &quot;myapp&quot;,
-      &quot;instance_id&quot;: &quot;4164682295655914646&quot;,
-      &quot;namespace_id&quot;: &quot;prod&quot;,
-      &quot;pod_id&quot;: &quot;my-app-6b495f4d8b-9l2gb&quot;,
-      &quot;project_id&quot;: &quot;my-project&quot;,
-      &quot;zone&quot;: &quot;europe-west1-b&quot;
+  <span style="color:#f92672">&#34;logName&#34;</span>: <span style="color:#e6db74">&#34;projects/my-project/logs/my-app&#34;</span>,
+  <span style="color:#f92672">&#34;receiveTimestamp&#34;</span>: <span style="color:#e6db74">&#34;2019–01–26T00:00:02.198052458Z&#34;</span>,
+  <span style="color:#f92672">&#34;resource&#34;</span>: {
+    <span style="color:#f92672">&#34;labels&#34;</span>: {
+      <span style="color:#f92672">&#34;cluster_name&#34;</span>: <span style="color:#e6db74">&#34;prod-cluster&#34;</span>,
+      <span style="color:#f92672">&#34;container_name&#34;</span>: <span style="color:#e6db74">&#34;myapp&#34;</span>,
+      <span style="color:#f92672">&#34;instance_id&#34;</span>: <span style="color:#e6db74">&#34;4164682295655914646&#34;</span>,
+      <span style="color:#f92672">&#34;namespace_id&#34;</span>: <span style="color:#e6db74">&#34;prod&#34;</span>,
+      <span style="color:#f92672">&#34;pod_id&#34;</span>: <span style="color:#e6db74">&#34;my-app-6b495f4d8b-9l2gb&#34;</span>,
+      <span style="color:#f92672">&#34;project_id&#34;</span>: <span style="color:#e6db74">&#34;my-project&#34;</span>,
+      <span style="color:#f92672">&#34;zone&#34;</span>: <span style="color:#e6db74">&#34;europe-west1-b&#34;</span>
     },
-    &quot;type&quot;: &quot;container&quot;
+    <span style="color:#f92672">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;container&#34;</span>
   },
-  &quot;severity&quot;: &quot;INFO&quot;,
-  &quot;textPayload&quot;: &quot;2019–01–26 01:00:00.788 INFO [:] DispatcherServlet:102 — Request in 3155 ms: /my/endpoint/ : 1.2.3.4 : Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)\n&quot;,
-  &quot;timestamp&quot;: &quot;2019-01-26T00:00:00Z&quot;
+  <span style="color:#f92672">&#34;severity&#34;</span>: <span style="color:#e6db74">&#34;INFO&#34;</span>,
+  <span style="color:#f92672">&#34;textPayload&#34;</span>: <span style="color:#e6db74">&#34;2019–01–26 01:00:00.788 INFO [:] DispatcherServlet:102 — Request in 3155 ms: /my/endpoint/ : 1.2.3.4 : Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)\n&#34;</span>,
+  <span style="color:#f92672">&#34;timestamp&#34;</span>: <span style="color:#e6db74">&#34;2019-01-26T00:00:00Z&#34;</span>
 }
-</code></pre>
-
-<p>You cannot do anything neither about the delay nor about the log format…</p>
-
+</code></pre></div><p>You cannot do anything neither about the delay nor about the log format…</p>
 <p>So what do we do if we want to parse out the textPayload of each json line and put that into a .txt file?</p>
-
 <h3 id="processing-the-exported-logs-with-cloud-functions">Processing the exported logs with Cloud Functions</h3>
-
 <p>You can use <a href="https://cloud.google.com/functions/">Cloud Functions</a> to process the exported log file in the bucket.</p>
-
 <p>Use the <code>--trigger-event google.storage.object.finalize</code> to execute the Cloud Function when this event on a particular bucket happens. This basically means that changing any file in some bucket will create this event and Cloud Function will consume that event and fire up a function to process it. For other <a href="https://cloud.google.com/functions/features/">supported event sources see the documentation</a>.</p>
-
 <p>We will use <code>nodejs-6</code> runtime for the Cloud Function.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#e6db74">&#39;use strict&#39;</span>;
 
-<pre><code class="language-javascript">'use strict';
+<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">path</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;path&#39;</span>);
+<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">fs</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;fs&#39;</span>);
+<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">Storage</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;@google-cloud/storage&#39;</span>);
+<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">readline</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;readline&#39;</span>);
 
-const path = require('path');
-const fs = require('fs');
-const Storage = require('@google-cloud/storage');
-const readline = require('readline');
+<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">DEST_BUCKET_NAME</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">env</span>.<span style="color:#a6e22e">DEST_BUCKET_NAME</span>;
 
-const DEST_BUCKET_NAME = process.env.DEST_BUCKET_NAME;
-
-// Instantiates a client
-const storage = Storage();
-</code></pre>
-
-<p>We initialized some global vars and imported libs to work with Google Cloud Storage</p>
-
+<span style="color:#75715e">// Instantiates a client
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">storage</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">Storage</span>();
+</code></pre></div><p>We initialized some global vars and imported libs to work with Google Cloud Storage</p>
 <p>Next, we will define some helper functions:</p>
-
-<pre><code class="language-javascript">function getFileStream (file) {
-  if (!file.bucket) {
-    throw new Error('Bucket not provided. Make sure you have a &quot;bucket&quot; property in your request');
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">getFileStream</span> (<span style="color:#a6e22e">file</span>) {
+  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">file</span>.<span style="color:#a6e22e">bucket</span>) {
+    <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">&#39;Bucket not provided. Make sure you have a &#34;bucket&#34; property in your request&#39;</span>);
   }
-  if (!file.name) {
-    throw new Error('Filename not provided. Make sure you have a &quot;name&quot; property in your request');
+  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">file</span>.<span style="color:#a6e22e">name</span>) {
+    <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">&#39;Filename not provided. Make sure you have a &#34;name&#34; property in your request&#39;</span>);
   }
 
-  return storage.bucket(file.bucket).file(file.name).createReadStream();
+  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">storage</span>.<span style="color:#a6e22e">bucket</span>(<span style="color:#a6e22e">file</span>.<span style="color:#a6e22e">bucket</span>).<span style="color:#a6e22e">file</span>(<span style="color:#a6e22e">file</span>.<span style="color:#a6e22e">name</span>).<span style="color:#a6e22e">createReadStream</span>();
 }
-</code></pre>
+</code></pre></div><p>Finally the main function:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#a6e22e">exports</span>.<span style="color:#a6e22e">logTransformer</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">event</span>, <span style="color:#a6e22e">callback</span>) =&gt; {
+  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">file</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">event</span>.<span style="color:#a6e22e">data</span>;
 
-<p>Finally the main function:</p>
+  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">filePath</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">file</span>.<span style="color:#a6e22e">name</span>; <span style="color:#75715e">// File path in the bucket.
+</span><span style="color:#75715e"></span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">contentType</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">file</span>.<span style="color:#a6e22e">contentType</span>; <span style="color:#75715e">// File content type.
+</span><span style="color:#75715e"></span>
+  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">destBucket</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">storage</span>.<span style="color:#a6e22e">bucket</span>(<span style="color:#a6e22e">DEST_BUCKET_NAME</span>);
 
-<pre><code class="language-javascript">exports.logTransformer = (event, callback) =&gt; {
-  const file = event.data;
+  <span style="color:#75715e">// Get the file name.
+</span><span style="color:#75715e"></span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">fileName</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">path</span>.<span style="color:#a6e22e">basename</span>(<span style="color:#a6e22e">filePath</span>);
 
-  const filePath = file.name; // File path in the bucket.
-  const contentType = file.contentType; // File content type.
-
-  const destBucket = storage.bucket(DEST_BUCKET_NAME);
-
-  // Get the file name.
-  const fileName = path.basename(filePath);
-
-  const options = {
-    input: getFileStream(file)
+  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">options</span> <span style="color:#f92672">=</span> {
+    <span style="color:#a6e22e">input</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">getFileStream</span>(<span style="color:#a6e22e">file</span>)
   };
 
-  // the output is no longer application/json but text/plain
-  const metadata = {
-    contentType: &quot;text/plain&quot;,
+  <span style="color:#75715e">// the output is no longer application/json but text/plain
+</span><span style="color:#75715e"></span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">metadata</span> <span style="color:#f92672">=</span> {
+    <span style="color:#a6e22e">contentType</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;text/plain&#34;</span>,
   };
 
-  const logStream = fs.createWriteStream('/tmp/log.txt', {flags: 'w', encoding: 'utf-8'});
+  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">logStream</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">fs</span>.<span style="color:#a6e22e">createWriteStream</span>(<span style="color:#e6db74">&#39;/tmp/log.txt&#39;</span>, {<span style="color:#a6e22e">flags</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;w&#39;</span>, <span style="color:#a6e22e">encoding</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;utf-8&#39;</span>});
 
-  logStream.on('open', function() {
+  <span style="color:#a6e22e">logStream</span>.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#39;open&#39;</span>, <span style="color:#66d9ef">function</span>() {
 
-    readline.createInterface(options)
-    .on('line', (line) =&gt; {
+    <span style="color:#a6e22e">readline</span>.<span style="color:#a6e22e">createInterface</span>(<span style="color:#a6e22e">options</span>)
+    .<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#39;line&#39;</span>, (<span style="color:#a6e22e">line</span>) =&gt; {
 
-        const clonedData = JSON.parse(line.replace(/\r?\n|\r/g, &quot; &quot;));
-        logStream.write(clonedData.textPayload.toString()); 
+        <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">clonedData</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">parse</span>(<span style="color:#a6e22e">line</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">/\r?\n|\r/g</span>, <span style="color:#e6db74">&#34; &#34;</span>));
+        <span style="color:#a6e22e">logStream</span>.<span style="color:#a6e22e">write</span>(<span style="color:#a6e22e">clonedData</span>.<span style="color:#a6e22e">textPayload</span>.<span style="color:#a6e22e">toString</span>()); 
       
     })
-    .on('close', () =&gt; {
-      logStream.end(function () { console.log('logstream end'); });
+    .<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#39;close&#39;</span>, () =&gt; {
+      <span style="color:#a6e22e">logStream</span>.<span style="color:#a6e22e">end</span>(<span style="color:#66d9ef">function</span> () { <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;logstream end&#39;</span>); });
 
     });
-  }).on('finish', () =&gt; {
+  }).<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#39;finish&#39;</span>, () =&gt; {
 
-     // We replace the .json suffix with .txt 
-     const thumbFileName = fileName.replace('.json','.txt');
-     const thumbFilePath = path.join(path.dirname(filePath), thumbFileName);
+     <span style="color:#75715e">// We replace the .json suffix with .txt 
+</span><span style="color:#75715e"></span>     <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">thumbFileName</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">fileName</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">&#39;.json&#39;</span>,<span style="color:#e6db74">&#39;.txt&#39;</span>);
+     <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">thumbFilePath</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">path</span>.<span style="color:#a6e22e">join</span>(<span style="color:#a6e22e">path</span>.<span style="color:#a6e22e">dirname</span>(<span style="color:#a6e22e">filePath</span>), <span style="color:#a6e22e">thumbFileName</span>);
 
-    // Uploading the thumbnail.
-    destBucket.upload('/tmp/log.txt', {
-      destination: thumbFilePath,
-      metadata: metadata,
-      resumable: false
+    <span style="color:#75715e">// Uploading the thumbnail.
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">destBucket</span>.<span style="color:#a6e22e">upload</span>(<span style="color:#e6db74">&#39;/tmp/log.txt&#39;</span>, {
+      <span style="color:#a6e22e">destination</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">thumbFilePath</span>,
+      <span style="color:#a6e22e">metadata</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">metadata</span>,
+      <span style="color:#a6e22e">resumable</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">false</span>
     });
     
-    callback();
+    <span style="color:#a6e22e">callback</span>();
   });
 };
-</code></pre>
-
-<p>And that’s about it! Save that to index.js a don’t forget to include dependencies in package.json.</p>
-
+</code></pre></div><p>And that’s about it! Save that to index.js a don’t forget to include dependencies in package.json.</p>
 <h3 id="deploy-it">Deploy it</h3>
-
 <p>Simply deploy it via gcloud CLI</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">SOURCE_BUCKET_NAME<span style="color:#f92672">=</span>my-bucket-exported-logs
+DEST_BUCKET_NAME<span style="color:#f92672">=</span>my-bucket-exported-logs-nojson
 
-<pre><code class="language-bash">SOURCE_BUCKET_NAME=my-bucket-exported-logs
-DEST_BUCKET_NAME=my-bucket-exported-logs-nojson
-
-gcloud beta functions deploy logTransformer \ 
-   --set-env-vars DEST_BUCKET_NAME=&quot;$DEST_BUCKET_NAME&quot; \
-   --runtime nodejs6 \
-   --region europe-west1 \
-   --memory 128MB  \
-   --trigger-resource &quot;$SOURCE_BUCKET_NAME&quot; \
-   --trigger-event google.storage.object.finalize
-</code></pre>
-
-<p>Cloud Functions come with handy out-of-box monitoring dashboard.</p>
-
+gcloud beta functions deploy logTransformer <span style="color:#ae81ff">\ </span>
+   --set-env-vars DEST_BUCKET_NAME<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$DEST_BUCKET_NAME<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>   --runtime nodejs6 <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>   --region europe-west1 <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>   --memory 128MB  <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>   --trigger-resource <span style="color:#e6db74">&#34;</span>$SOURCE_BUCKET_NAME<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>   --trigger-event google.storage.object.finalize
+</code></pre></div><p>Cloud Functions come with handy out-of-box monitoring dashboard.</p>
 <p>Execution Time here:
-<img src="/posts/2019-01-26_gcp-stackdriver-logging-export-to-bucket-and-extract-textpayload-from-json-with-cloud-functions/images/2.png" alt="Cloud Functions - Execution Time" title="Cloud Functions - Execution Time" /></p>
-
+<img src="/posts/2019-01-26_gcp-stackdriver-logging-export-to-bucket-and-extract-textpayload-from-json-with-cloud-functions/images/2.png" alt="Cloud Functions - Execution Time" title="Cloud Functions - Execution Time"></p>
 <p>Don’t forget to check the ‘View Logs’ (if you didn’t exclude them of course) for troubleshooting.</p>
-
 <p>This month we’ve processed 14GiB with it so far and it’s still covered by the free tier Cloud Functions usage ❤</p>
-
 <h2 id="links">Links</h2>
-
 <p>Source code: <a href="https://github.com/marekaf/gcp-stackdriver-logging-extract-textpayload/blob/master/README.md">https://github.com/marekaf/gcp-stackdriver-logging-extract-textpayload</a>
 Google Cloud Platform Logging Architecture <a href="https://cloud.google.com/logging/docs/export/">https://cloud.google.com/logging/docs/export/</a></p>
 
